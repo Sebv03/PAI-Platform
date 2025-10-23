@@ -1,0 +1,22 @@
+# Ignorar la carpeta de entorno virtual de Python
+/backend/venv/
+
+# Ignorar la carpeta de dependencias de Node.js
+/frontend/node_modules/
+/frontend/dist/
+
+# Archivos de caché
+__pycache__/
+*.pyc
+*.sqlite
+.DS_Store # Archivos de macOS
+
+# Archivos de entorno local (si los usas, ej. para variables de DB)
+.env
+.env.local
+
+# Logs
+*.log
+
+# Archivos de IDE (ej. VS Code)
+.vscode/

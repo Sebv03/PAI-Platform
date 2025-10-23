@@ -1,0 +1,49 @@
+# Versión de la sintaxis de Docker Compose
+version: '3.8'
+
+# Definición de los servicios (contenedores) que compondrán nuestra aplicación
+services:
+  # Servicio de la Base de Datos
+  db:
+    image: postgres:15-alpine
+    container_name: pai_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=pai_db
+    restart: unless-stopped
+
+  # Servicio del Backend (API)
+  backend:
+    build: ./backend
+    container_name: pai_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/code
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@db:5432/pai_db
+    depends_on:
+      - db
+    restart: unless-stopped
+
+#  # Servicio del Frontend (React App) - TEMPORALMENTE DESHABILITADO
+#  frontend:
+#    build: ./frontend
+#    container_name: pai_frontend
+#    ports:
+#      - "5173:5173"
+#    volumes:
+#      - ./frontend:/app
+#      - /app/node_modules
+#    depends_on:
+#      - backend
+#    restart: unless-stopped
+
+# Definición de los volúmenes para la persistencia de datos
+volumes:
+  postgres_data:
