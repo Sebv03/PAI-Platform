@@ -1,14 +1,22 @@
 # backend/app/db/session.py
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from app.core.config import settings # ¡Aun la necesitamos para otras configs!
 
-from app.core.config import settings
+# --- CAMBIO AQUÍ ---
+# Comenta la línea que usa settings.DATABASE_URL
+# DATABASE_URL = settings.DATABASE_URL
 
-# Creamos el motor de base de datos.
-# El engine es el punto de entrada a la base de datos.
-engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
+# Define la URL directamente aquí con tus datos:
+# Asegúrate que 'TU_CONTRASEÑA_REAL' sea la contraseña correcta de tu usuario 'postgres'
+DATABASE_URL_HARDCODED = "postgresql://postgres:123456@localhost:5433/pai_db" # <--- ¡VERIFICAR ESTO!
 
-# Creamos una fábrica de sesiones.
-# Cada instancia de SessionLocal será una nueva sesión de base de datos.
+engine = create_engine(DATABASE_URL_HARDCODED, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
