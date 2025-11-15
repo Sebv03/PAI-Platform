@@ -1,57 +1,28 @@
 // frontend/src/components/CourseList.jsx
-import React, { useState, useEffect } from 'react';
-import apiClient from '../services/api'; // Nuestro cliente axios configurado
+import React from 'react';
+import { Link } from 'react-router-dom'; // Por si en el futuro quieres enlaces a cursos individuales
 
-const CourseList = () => {
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+const CourseList = ({ courses }) => {
+    console.log("CourseList: Cursos recibidos en prop:", courses); // Log para depuración
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        // Hacemos la petición GET a /courses/
-        // El interceptor de apiClient añadirá el token automáticamente
-        const response = await apiClient.get('/courses/');
-        setCourses(response.data);
-      } catch (err) {
-        console.error('Error al cargar los cursos:', err);
-        setError('No se pudieron cargar los cursos. Intenta de nuevo más tarde.');
-        // TODO: Manejar errores 401/403 (token expirado/no autorizado)
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!courses || courses.length === 0) {
+        return <p style={{ color: '#ccc' }}>No hay cursos para mostrar.</p>;
+    }
 
-    fetchCourses();
-  }, []); // El array vacío asegura que se ejecute solo una vez al montar
-
-  if (loading) {
-    return <p>Cargando cursos...</p>;
-  }
-
-  if (error) {
-    return <p style={{ color: 'red' }}>{error}</p>;
-  }
-
-  if (courses.length === 0) {
-    return <p>Aún no hay cursos disponibles.</p>;
-  }
-
-  return (
-    <div>
-      <h3>Mis Cursos</h3>
-      <ul>
-        {courses.map((course) => (
-          <li key={course.id}>
-            <strong>{course.title}</strong>
-            <p>{course.description}</p>
-            {/* Podemos añadir un enlace para ver detalles del curso aquí */}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+    return (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+            {courses.map((course) => (
+                <div key={course.id} style={{ border: '1px solid #666', borderRadius: '8px', padding: '15px', backgroundColor: '#555', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
+                    <h4 style={{ margin: '0 0 10px 0', color: '#007bff' }}>{course.title}</h4>
+                    <p style={{ fontSize: '0.9em', color: '#ccc', marginBottom: '10px' }}>{course.description}</p>
+                    {/* Asegúrate de que 'owner_id' o 'owner_name' exista en tu objeto 'course' del backend */}
+                    {course.owner_id && <p style={{ fontSize: '0.8em', color: '#aaa' }}>ID del Propietario: {course.owner_id}</p>}
+                    {/* Podrías añadir más detalles o un enlace si es necesario */}
+                    {/* <Link to={`/courses/${course.id}`} style={{ color: '#007bff', textDecoration: 'none', fontSize: '0.9em' }}>Ver Detalles</Link> */}
+                </div>
+            ))}
+        </div>
+    );
 };
 
 export default CourseList;
