@@ -1,20 +1,18 @@
 # backend/app/db/session.py
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.core.config import settings # ¡Aun la necesitamos para otras configs!
 
-# --- CAMBIO AQUÍ ---
-# Comenta la línea que usa settings.DATABASE_URL
-# DATABASE_URL = settings.DATABASE_URL
+from app.core.config import settings
 
-# Define la URL directamente aquí con tus datos:
-# Asegúrate que 'TU_CONTRASEÑA_REAL' sea la contraseña correcta de tu usuario 'postgres'
-DATABASE_URL_HARDCODED = "postgresql://postgres:123456@localhost:5433/pai_db" # <--- ¡VERIFICAR ESTO!
-
-engine = create_engine(DATABASE_URL_HARDCODED, pool_pre_ping=True)
+engine = create_engine(
+    settings.SQLALCHEMY_DATABASE_URI, 
+    pool_pre_ping=True, 
+    # Añadir esta línea para sqlite si es el caso, pero no para postgres
+    # connect_args={"check_same_thread": False} 
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def get_db():
+def get_db(): # Esta función DEBE ser un generador
     db = SessionLocal()
     try:
         yield db

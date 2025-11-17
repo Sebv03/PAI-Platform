@@ -1,18 +1,28 @@
 # backend/app/schemas/submission.py
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from typing import Optional
 from datetime import datetime
 
-# Schema para la creación (lo que la API recibe)
-class SubmissionCreate(BaseModel):
-    content: str | None = None # El texto de la entrega
+# Campos que se comparten (base)
+class SubmissionBase(BaseModel):
+    content: Optional[str] = None
 
-# Schema para leer (lo que la API devuelve)
-class Submission(BaseModel):
+# Esquema para crear una entrega (lo que envía el estudiante)
+# El student_id vendrá del token
+# El task_id vendrá de la URL
+class SubmissionCreate(SubmissionBase):
+    pass # Solo necesita el contenido
+
+# Esquema para actualizar (ej. un docente añade nota)
+class SubmissionUpdate(BaseModel):
+    content: Optional[str] = None
+    # Añadiremos 'grade' y 'feedback' aquí cuando creemos el modelo Grade
+
+# Esquema para leer una entrega (lo que la API devuelve)
+class Submission(SubmissionBase):
     id: int
-    timestamp_entrega: datetime
-    content: str | None = None
-    task_id: int
     student_id: int
-
-    class Config:
-        from_attributes = True
+    task_id: int
+    submitted_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)

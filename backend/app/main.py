@@ -10,13 +10,13 @@ from app.api.endpoints.login import router as login_router # Importación explí
 
 # --- ¡PREPARADO PARA FUTUROS ROUTERS! ---
 from app.api.endpoints import tasks # Descomenta cuando crees tasks.py
-# from app.api.endpoints import submissions # Descomenta cuando crees submissions.py
-# from app.api.endpoints import enrollments # Descomenta cuando crees enrollments.py
+from app.api.endpoints import submissions # Descomenta cuando crees submissions.py
+from app.api.endpoints import enrollments # Descomenta cuando crees enrollments.py
 
 
 from app.core.config import settings
 from app.db.base import Base # Necesario para Base.metadata.create_all
-from app.db.session import engine # Necesario para Base.metadata.create_all
+from app.db.session import engine, get_db # Necesario para Base.metadata.create_all
 
 # Función para crear las tablas en la base de datos
 def create_tables():
@@ -49,8 +49,8 @@ app.include_router(courses.router, prefix="/courses", tags=["courses"])
 
 # --- ¡DESCOMENTA ESTAS LÍNEAS CUANDO HAYAS CREADO LOS ARCHIVOS CORRESPONDIENTES! ---
 app.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
-# app.include_router(submissions.router, prefix="/submissions", tags=["submissions"])
-# app.include_router(enrollments.router, prefix="/enrollments", tags=["enrollments"])
+app.include_router(submissions.router, prefix="/submissions", tags=["submissions"])
+app.include_router(enrollments.router, prefix="/enrollments", tags=["enrollments"])
 
 
 # Rutas de prueba (opcional)

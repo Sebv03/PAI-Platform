@@ -1,13 +1,16 @@
 # backend/app/api/endpoints/tasks.py
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response # <-- ¡Añade Response aquí!
 from sqlalchemy.orm import Session
 from typing import List, Any
+from datetime import datetime # Para validación de fechas
 
 from app.api import deps
 from app.crud import crud_task, crud_course # Necesitamos crud_course para verificar si el curso existe
 from app.schemas.task import Task, TaskCreate, TaskUpdate # Importamos los esquemas de Task
 from app.models.user import User as UserModel # Importamos el modelo User para tipos de current_user
 from app.models.user import UserRole # Para verificar roles
+from app.schemas.submission import Submission, SubmissionCreate
+from app.crud import crud_submission, crud_enrollment
 
 router = APIRouter()
 
@@ -41,7 +44,14 @@ async def create_new_task(
             detail="No tienes permiso para crear tareas en este curso."
         )
 
-    task = crud_task.create_task(db, task_in=task_in)
+    # La fecha de entrega no puede ser en el pasado (opcional, pero buena práctica)
+    if task_in.due_date < datetime.now():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La fecha de entrega no puede ser en el pasado."
+        )
+
+    task = crud_task.create_task(db, task_in=task_in, course_id=task_in.course_id)
     return task
 
 # ----------------- Endpoint para obtener una tarea por ID -----------------
@@ -61,19 +71,30 @@ async def read_task_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Tarea no encontrada."
         )
-    
-    # Verificar permisos (docente del curso, estudiante inscrito, administrador)
+
     course = crud_course.get_course_by_id(db, course_id=task.course_id)
-    
+    if not course: # Esto no debería pasar si la FK es correcta, pero es un buen check
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Curso asociado a la tarea no encontrado."
+        )
+
+    # Lógica de Permisos Unificada
     if current_user.role == UserRole.ADMINISTRADOR:
         return task
-    
+
     if current_user.id == course.owner_id: # Docente propietario del curso
         return task
-    
-    # Verificar si el usuario es un estudiante inscrito en el curso
-    # Esto requeriría crud_enrollment.is_user_enrolled(db, user_id=current_user.id, course_id=course.id)
-    # Por ahora, si no es admin ni docente, se deniega. Lo implementaremos más adelante.
+
+    if current_user.role == UserRole.ESTUDIANTE:
+        # Verificar si el estudiante está inscrito en el curso
+        enrollment = crud_enrollment.get_enrollment_by_user_and_course(
+            db, student_id=current_user.id, course_id=course.id
+        )
+        if enrollment: # Si hay una inscripción, el estudiante puede ver la tarea
+            return task
+
+    # Si ninguna de las condiciones anteriores se cumple, denegar el acceso
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="No tienes permiso para ver esta tarea."
@@ -98,17 +119,26 @@ async def read_tasks_by_course(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"El curso con ID {course_id} no existe."
         )
-    
+
+    # Lógica de Permisos Unificada
     if current_user.role == UserRole.ADMINISTRADOR:
         tasks = crud_task.get_tasks_by_course(db, course_id=course_id, skip=skip, limit=limit)
         return tasks
-    
+
     if current_user.id == course.owner_id: # Docente propietario
         tasks = crud_task.get_tasks_by_course(db, course_id=course_id, skip=skip, limit=limit)
         return tasks
-    
-    # Aquí iría la verificación para estudiantes inscritos (requiere crud_enrollment)
-    # Por ahora, si no es admin ni docente, se deniega.
+
+    if current_user.role == UserRole.ESTUDIANTE:
+        # Verificar si el estudiante está inscrito en el curso
+        enrollment = crud_enrollment.get_enrollment_by_user_and_course(
+            db, student_id=current_user.id, course_id=course_id
+        )
+        if enrollment: # Si hay una inscripción, el estudiante puede ver las tareas
+            tasks = crud_task.get_tasks_by_course(db, course_id=course_id, skip=skip, limit=limit)
+            return tasks
+
+    # Si ninguna de las condiciones anteriores se cumple, denegar el acceso
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="No tienes permiso para ver las tareas de este curso."
@@ -147,41 +177,123 @@ async def update_existing_task(
             detail="No tienes permiso para actualizar esta tarea."
         )
 
+    # La fecha de entrega no puede ser en el pasado si se actualiza a una fecha pasada
+    if task_in.due_date and task_in.due_date < datetime.now():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La fecha de entrega no puede ser en el pasado."
+        )
+
     task = crud_task.update_task(db, db_task=db_task, task_in=task_in)
     return task
 
 # ----------------- Endpoint para eliminar una tarea -----------------
-##@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-#async def delete_existing_task(
- #   task_id: int,
-  #  db: Session = Depends(deps.get_db),
-  #  current_user: UserModel = Depends(deps.get_current_user)
-#) -> Any:
+# ¡REINTRODUCIMOS ESTA RUTA CON LA CORRECCIÓN!
+@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_existing_task(
+    task_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: UserModel = Depends(deps.get_current_user)
+) -> Response: # <-- Cambiado a Response para que no devuelva cuerpo
     """
     Elimina una tarea existente. Solo docentes o administradores pueden eliminar tareas.
     El docente debe ser el propietario del curso al que pertenece la tarea.
     """
-  #  if current_user.role not in [UserRole.DOCENTE, UserRole.ADMINISTRADOR]:
-     #   raise HTTPException(
-      #      status_code=status.HTTP_403_FORBIDDEN,
-       #     detail="Solo docentes o administradores pueden eliminar tareas."
-     #   )
+    if current_user.role not in [UserRole.DOCENTE, UserRole.ADMINISTRADOR]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo docentes o administradores pueden eliminar tareas."
+        )
 
-   # db_task = crud_task.get_task_by_id(db, task_id=task_id)
-   # if not db_task:
-      #  raise HTTPException(
-     #       status_code=status.HTTP_404_NOT_FOUND,
-    #        detail="Tarea no encontrada."
-   #     )
+    db_task = crud_task.get_task_by_id(db, task_id=task_id)
+    if not db_task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tarea no encontrada."
+        )
     
-  #  # Verificar que el usuario actual es el propietario del curso de la tarea
- #   course = crud_course.get_course_by_id(db, course_id=db_task.course_id)
-  #  if course.owner_id != current_user.id and current_user.role != UserRole.ADMINISTRADOR:
- #       raise HTTPException(
-  #          status_code=status.HTTP_403_FORBIDDEN,
- #           detail="No tienes permiso para eliminar esta tarea."
-  #      )
+    course = crud_course.get_course_by_id(db, course_id=db_task.course_id)
+    if course.owner_id != current_user.id and current_user.role != UserRole.ADMINISTRADOR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para eliminar esta tarea."
+        )
 
-  #  crud_task.delete_task(db, task_id=task_id)
-  #  # ¡CORRECCIÓN AQUÍ! No devolver nada para 204 No Content
-  #  return Response(status_code=status.HTTP_204_NO_CONTENT)##
+    crud_task.delete_task(db, task_id=task_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT) # <-- ¡La corrección clave!
+
+
+@router.post("/{task_id}/submit", response_model=Submission, status_code=status.HTTP_201_CREATED)
+async def submit_task(
+    task_id: int,
+    submission_in: SubmissionCreate,
+    db: Session = Depends(deps.get_db),
+    current_user: UserModel = Depends(deps.get_current_user)
+) -> Any:
+    """
+    Permite a un estudiante autenticado entregar una tarea.
+    """
+    # 1. Verificar que el usuario es un estudiante
+    if current_user.role != UserRole.ESTUDIANTE:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo los estudiantes pueden entregar tareas."
+        )
+
+    # 2. Verificar que la tarea existe
+    task = crud_task.get_task_by_id(db, task_id=task_id)
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="La tarea no existe."
+        )
+
+    # 3. ¡NUEVO! Verificar que el estudiante esté inscrito en el curso de la tarea
+    enrollment = crud_enrollment.get_enrollment_by_user_and_course(
+        db, student_id=current_user.id, course_id=task.course_id
+    )
+    if not enrollment:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No estás inscrito en el curso de esta tarea."
+        )
+
+    # 4. Verificar que el estudiante no haya entregado ya esta tarea
+    existing_submission = crud_submission.get_submission_by_task_and_student(
+        db, task_id=task_id, student_id=current_user.id
+    )
+    if existing_submission:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya has entregado esta tarea. Puedes editar tu entrega existente."
+        )
+
+    # 5. Crear la entrega
+    submission = crud_submission.create_submission(
+        db, submission_in=submission_in, task_id=task_id, student_id=current_user.id
+    )
+    return submission
+
+    # 3. (Aún no implementado) Verificar que el estudiante esté inscrito en el curso
+    # enrollment = crud_enrollment.get_enrollment_by_user_and_course(db, user_id=current_user.id, course_id=task.course_id)
+    # if not enrollment:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="No estás inscrito en el curso de esta tarea."
+    #     )
+
+    # 4. Verificar que el estudiante no haya entregado ya esta tarea
+    existing_submission = crud_submission.get_submission_by_task_and_student(
+        db, task_id=task_id, student_id=current_user.id
+    )
+    if existing_submission:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya has entregado esta tarea. Puedes editar tu entrega existente."
+        )
+    
+    # 5. Crear la entrega
+    submission = crud_submission.create_submission(
+        db, submission_in=submission_in, task_id=task_id, student_id=current_user.id
+    )
+    return submission

@@ -1,30 +1,59 @@
 // frontend/src/services/api.js
 import axios from 'axios';
-import useAuthStore from '../store/authStore';
+import useAuthStore from '../store/authStore'; // Importa tu store de Zustand
 
-// Creamos una instancia de axios con la URL base de nuestra API
+// Define la URL base de tu API de FastAPI
+export const API_BASE_URL = 'http://localhost:8000';
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000',
+    baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
 });
 
-// --- Interceptor de Petición ---
-// Esto se ejecuta ANTES de que cada petición sea enviada
+// Interceptor para adjuntar el token de autenticación antes de cada petición
 apiClient.interceptors.request.use(
-  (config) => {
-    // Obtenemos el token desde el store de Zustand
-    const token = useAuthStore.getState().token;
-
-    if (token) {
-      // Si el token existe, lo añadimos a la cabecera
-      config.headers['Authorization'] = `Bearer ${token}`;
+    (config) => {
+        const token = useAuthStore.getState().token; // Obtiene el token del store de Zustand
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
 );
 
-// TODO: Añadir un interceptor de RESPUESTA para manejar errores 401 (token expirado)
+// Interceptor para manejar respuestas de error (opcional pero útil)
+apiClient.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+
+        // Si es un 401 y no es la petición de login original
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true; // Marca la petición para evitar bucles infinitos
+
+            const token = useAuthStore.getState().token;
+            if (!token) { // Si no hay token, redirige al login
+                useAuthStore.getState().logout();
+                window.location.href = '/login'; // Redirige de forma "dura"
+                return Promise.reject(error);
+            }
+
+            // Aquí iría la lógica para refrescar el token si tuviéramos un endpoint de refresh
+            // Por ahora, si un token es 401, asumimos que está expirado o es inválido
+            // y simplemente cerramos sesión.
+
+            useAuthStore.getState().logout();
+            window.location.href = '/login'; // Redirige al login
+            return Promise.reject(error);
+        }
+        return Promise.reject(error);
+    }
+);
+
 
 export default apiClient;

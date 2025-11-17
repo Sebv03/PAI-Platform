@@ -1,9 +1,9 @@
 # backend/app/models/course.py
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime # <-- Asegúrate de tener DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func # <-- Asegúrate de importar func
-from app.db.base import Base
 from sqlalchemy.sql import text
+
+from app.db.base import Base
 
 class Course(Base):
     __tablename__ = "courses"
@@ -12,11 +12,13 @@ class Course(Base):
     title = Column(String, index=True, nullable=False)
     description = Column(String, nullable=True)
     
-    # --- ¡ESTA LÍNEA ES CRÍTICA! ---
-    created_at = Column(DateTime, server_default=text("NOW()"), nullable=False)
-
+    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"), nullable=False)
+    
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
+    # --- Relaciones ---
     owner = relationship("User", back_populates="courses")
     enrollments = relationship("Enrollment", back_populates="course", cascade="all, delete-orphan")
+    
+    # --- ASEGÚRATE DE QUE ESTA LÍNEA ESTÉ ASÍ ---
     tasks = relationship("Task", back_populates="course", cascade="all, delete-orphan")

@@ -1,30 +1,30 @@
 # backend/app/schemas/task.py
 from pydantic import BaseModel, ConfigDict
-from datetime import datetime
 from typing import Optional
+from datetime import datetime
 
-# Propiedades comunes que una tarea puede tener
+# Esquema Base con campos comunes para Pydantic (sin ID, created_at, etc.)
 class TaskBase(BaseModel):
     title: str
     description: Optional[str] = None
-    due_date: datetime # La fecha de entrega de la tarea
-    course_id: int # ID del curso al que pertenece la tarea
+    due_date: datetime
 
-# Propiedades para la creación de una tarea (cuando el usuario envía datos)
+# Esquema para crear una tarea (incluye course_id, que se envía al crear)
 class TaskCreate(TaskBase):
-    pass # No hay propiedades adicionales requeridas para la creación en este momento
+    course_id: int # ¡Este campo es fundamental para la creación!
 
-# Propiedades para la actualización de una tarea (algunos campos son opcionales)
-class TaskUpdate(TaskBase):
+# Esquema para actualizar una tarea (todos los campos son opcionales)
+class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     due_date: Optional[datetime] = None
-    course_id: Optional[int] = None # Aunque un course_id no suele cambiar, lo dejamos opcional
+    # course_id no se suele cambiar una vez creada la tarea, por eso no lo incluimos aquí.
 
-# Propiedades que la API devuelve (incluye campos generados por la BD)
+# Esquema para representar una tarea completa (lo que la API devuelve)
 class Task(TaskBase):
     id: int
-    created_at: datetime # Fecha de creación de la tarea (generada por la BD)
+    course_id: int # Confirmamos que se devuelve el ID del curso
+    created_at: datetime
 
     # Configuración para que Pydantic pueda leer modelos de SQLAlchemy
     model_config = ConfigDict(from_attributes=True)

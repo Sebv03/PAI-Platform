@@ -1,75 +1,55 @@
-# backend/app/api/endpoints/enrollments.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List, Any
 
-from app.schemas.enrollment import Enrollment, EnrollmentCreate
-from app.crud import crud_enrollment, crud_user, crud_course
 from app.api import deps
-from app.models.user import User, UserRole # Importamos el modelo y el Enum
+from app.crud import crud_enrollment, crud_course
+from app.schemas.enrollment import Enrollment, EnrollmentCreate # Asegúrate que EnrollmentCreate esté en schemas/enrollment.py
+from app.schemas.course import Course as CourseSchema # Usamos el schema de Course para la respuesta
+from app.models.user import User as UserModel
+from app.models.user import UserRole
 
 router = APIRouter()
 
-@router.post("/", response_model=Enrollment)
-def create_enrollment(
-    *,
+# ----------------- Endpoint para OBTENER los cursos inscritos del ESTUDIANTE actual -----------------
+@router.get("/me", response_model=List[CourseSchema])
+async def read_my_enrollments(
     db: Session = Depends(deps.get_db),
-    enrollment_in: EnrollmentCreate,
-    current_user: User = Depends(deps.get_current_user)
-):
+    current_user: UserModel = Depends(deps.get_current_user)
+) -> Any:
     """
-    Crea una nueva matrícula (solo para docentes).
+    Obtiene la lista de cursos en los que el estudiante actual está inscrito.
     """
+    if current_user.role != UserRole.ESTUDIANTE:
+        raise HTTPException(status_code=403, detail="Solo los estudiantes pueden ver sus inscripciones.")
+        
+    courses = crud_enrollment.get_enrolled_courses_by_student(db, student_id=current_user.id)
+    return courses
 
-    # --- REGLA 1: Solo docentes o admins pueden matricular ---
-    if current_user.role not in [UserRole.DOCENTE, UserRole.ADMINISTRADOR]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permisos para realizar esta acción.",
-        )
+# ----------------- Endpoint para INSCRIBIR al ESTUDIANTE actual en un curso -----------------
+@router.post("/", response_model=Enrollment, status_code=status.HTTP_201_CREATED)
+async def enroll_student_in_course(
+    enrollment_in: EnrollmentCreate, # Recibimos el course_id desde el schema
+    db: Session = Depends(deps.get_db),
+    current_user: UserModel = Depends(deps.get_current_user)
+) -> Any:
+    """
+    Inscribe al usuario (estudiante) actual en un curso.
+    """
+    if current_user.role != UserRole.ESTUDIANTE:
+        raise HTTPException(status_code=403, detail="Solo los estudiantes pueden inscribirse en cursos.")
 
-    # --- REGLA 2: El curso debe existir ---
-    course = crud_course.get_course_by_id(
-        db, course_id=enrollment_in.course_id
-    )
+    course = crud_course.get_course_by_id(db, course_id=enrollment_in.course_id)
     if not course:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="El curso especificado no existe.",
-        )
+        raise HTTPException(status_code=404, detail="Curso no encontrado.")
+
+    # Verificar que el estudiante no sea el dueño del curso (un docente no se inscribe a su propio curso)
+    if course.owner_id == current_user.id:
+        raise HTTPException(status_code=400, detail="No puedes inscribirte en tu propio curso.")
+
+    existing = crud_enrollment.get_enrollment_by_user_and_course(db, student_id=current_user.id, course_id=enrollment_in.course_id)
+    if existing:
+        raise HTTPException(status_code=400, detail="Ya estás inscrito en este curso.")
     
-    
-
-    # --- REGLA 3: El docente debe ser dueño del curso ---
-    if course.owner_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No puedes matricular alumnos en un curso que no te pertenece.",
-        )
-
-    # --- REGLA 4: El estudiante debe existir ---
-    student = crud_user.get_user_by_id(
-        db, user_id=enrollment_in.student_id
-    )
-    if not student or student.role != UserRole.ESTUDIANTE:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="El ID de estudiante proporcionado no existe o no es un estudiante.",
-        )
-
-    # --- REGLA 5: No se puede duplicar la matrícula ---
-    existing_enrollment = crud_enrollment.get_by_student_and_course(
-        db,
-        student_id=enrollment_in.student_id,
-        course_id=enrollment_in.course_id,
-    )
-    if existing_enrollment:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Este estudiante ya está matriculado en este curso.",
-        )
-
-    # --- Si todo pasa, se crea la matrícula ---
-    enrollment = crud_enrollment.create_enrollment(
-        db, enrollment_in=enrollment_in
-    )
+    enrollment = crud_enrollment.create_enrollment(db, student_id=current_user.id, course_id=enrollment_in.course_id)
     return enrollment

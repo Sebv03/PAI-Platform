@@ -6,15 +6,15 @@ from app.models.task import Task # Importa el modelo de SQLAlchemy
 from app.schemas.task import TaskCreate, TaskUpdate # Importa los esquemas de Pydantic
 
 # ----------------- Crear una nueva tarea -----------------
-def create_task(db: Session, task_in: TaskCreate) -> Task:
+def create_task(db: Session, task_in: TaskCreate, course_id: int) -> Task:
     """
-    Crea una nueva tarea en la base de datos.
+    Crea una nueva tarea para un curso específico.
     """
     db_task = Task(
         title=task_in.title,
         description=task_in.description,
         due_date=task_in.due_date,
-        course_id=task_in.course_id
+        course_id=course_id # Asignamos el course_id pasado directamente
         # 'created_at' será generado automáticamente por el server_default
     )
     db.add(db_task)
