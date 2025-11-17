@@ -1,42 +1,23 @@
-// frontend/src/store/authStore.js
 import { create } from 'zustand';
 
-const getInitialToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('access_token');
-  }
-  return null;
-};
+const useAuthStore = create((set) => ({
+  token: localStorage.getItem('token') || null,
+  user: null, // <-- Estado para guardar los datos del usuario
 
-const useAuthStore = create((set, get) => ({ // <-- Añadimos 'get' para leer el estado
-  // Estado
-  token: getInitialToken(),
-  user: null, // Aquí guardaremos el objeto { email, id, role, ... }
-
-  // Acciones
-  setToken: (newToken) => {
-    set({ token: newToken });
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('access_token', newToken);
-    }
-  },
-  
-  // --- NUEVA ACCIÓN ---
-  setUserData: (userData) => {
-    set({ user: userData });
+  login: (token, user) => { // <-- La función 'login' ahora acepta 'user'
+    set({ token, user });
+    localStorage.setItem('token', token);
+    // Opcional: guardar también el usuario en localStorage
+    // localStorage.setItem('user', JSON.stringify(user)); 
   },
 
   logout: () => {
-    set({ token: null, user: null });
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-    }
+    set({ token: null, user: null }); // <-- Limpiar también el usuario
+    localStorage.removeItem('token');
+    // localStorage.removeItem('user');
   },
 
-  isAuthenticated: () => {
-    const token = get().token; // Usamos get() para leer el estado actual
-    return !!token;
-  },
+  isAuthenticated: () => !!localStorage.getItem('token'),
 }));
 
 export default useAuthStore;

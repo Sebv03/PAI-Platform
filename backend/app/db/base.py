@@ -1,8 +1,9 @@
 # backend/app/db/base.py
+from sqlalchemy.ext.declarative import declarative_base
 
-from sqlalchemy.orm import DeclarativeBase
+# La clase Base que tus modelos usarán para heredar
+Base = declarative_base()
 
-# Esta será la clase base de la que heredarán todos nuestros modelos.
-# NO debe importar ningún modelo aquí.
-class Base(DeclarativeBase):
-    pass
+# Importa el paquete de modelos. Esto asegura que todos los modelos se registren
+# con Base.metadata, pero evita importaciones directas que puedan causar ciclos.
+import app.models # <--- ¡CAMBIO CLAVE AQUÍ!

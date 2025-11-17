@@ -1,105 +1,137 @@
-// frontend/src/components/LoginForm.jsx
 import React, { useState } from 'react';
-import apiClient from '../services/api'; // Importamos nuestra instancia de axios configurada
-import useAuthStore from '../store/authStore'; // Importamos nuestro store de Zustand
+import { useNavigate } from 'react-router-dom';
+import apiClient from '../services/api';
+import useAuthStore from '../store/authStore';
 
 const LoginForm = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState(null);
+    const login = useAuthStore((state) => state.login);
+    const navigate = useNavigate();
 
-  // Obtenemos las acciones 'setToken' y 'setUserData' de nuestro store de autenticación
-  // Estas acciones actualizarán el estado global y el localStorage.
-  const setToken = useAuthStore((state) => state.setToken);
-  const setUserData = useAuthStore((state) => state.setUserData);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault(); // Previene el comportamiento por defecto del formulario (recargar la página)
-    setError('');       // Limpiamos cualquier error previo
+        try {
+            // --- PASO 1: Obtener el Token ---
+            // Los datos para OAuth2PasswordRequestForm deben enviarse como x-www-form-urlencoded
+            const formBody = new URLSearchParams();
+            formBody.append('username', username);
+            formBody.append('password', password);
 
-    try {
-      // --- PASO 1: Petición de Login a FastAPI para obtener el token JWT ---
-      // Usamos apiClient.post para enviar las credenciales.
-      // El endpoint es '/login/token' y el baseURL ya está configurado en apiClient.
-      // FastAPI espera un formulario x-www-form-urlencoded para este endpoint,
-      // por eso usamos URLSearchParams.
-      const loginResponse = await apiClient.post(
-        '/login/token', // Endpoint específico para obtener el token
-        new URLSearchParams({ username: email, password: password }),
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded', // Cabecera necesaria para este tipo de petición
-          },
+            const response = await apiClient.post('/login/access-token', formBody, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded' // Indica el tipo de contenido
+                }
+            });
+            
+            const { access_token } = response.data;
+            
+            // --- PASO 2: Obtener los datos del Usuario usando el Token ---
+            // Guardamos el token temporalmente en el store para que la siguiente llamada lo use
+            // Esto es crucial para que apiClient.get('/users/me') envíe el token recién adquirido
+            useAuthStore.setState({ token: access_token }); 
+            
+            const userResponse = await apiClient.get('/users/me');
+            
+            // --- PASO 3: Guardar Token y Usuario en el Store ---
+            login(access_token, userResponse.data); // Llama a la función login actualizada en authStore
+            
+            navigate('/dashboard');
+
+        } catch (err) {
+            console.error('Error de login:', err);
+            // Si el error tiene una respuesta y un mensaje de detalle, usarlo
+            if (err.response && err.response.data && err.response.data.detail) {
+                setError(err.response.data.detail);
+            } else {
+                setError('Error al iniciar sesión. Verifica tus credenciales.');
+            }
         }
-      );
+    };
 
-      const { access_token } = loginResponse.data; // Extraemos el token de la respuesta
-      console.log('Login exitoso. Token:', access_token);
-      
-      // Guardamos el token en nuestro store de Zustand y en localStorage.
-      // Esto también marca al usuario como autenticado.
-      setToken(access_token);
+    return (
+        <form onSubmit={handleSubmit} style={styles.form}>
+            <h2 style={styles.h2}>Iniciar Sesión</h2>
+            {error && <p style={styles.errorText}>{error}</p>}
+            <div style={styles.formGroup}>
+                <label style={styles.label}>Email (Username):</label>
+                <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    style={styles.input}
+                />
+            </div>
+            <div style={styles.formGroup}>
+                <label style={styles.label}>Contraseña:</label>
+                <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    style={styles.input}
+                />
+            </div>
+            <button type="submit" style={styles.button}>Entrar</button>
+        </form>
+    );
+};
 
-      // --- PASO 2: Petición a FastAPI para obtener los datos del usuario logueado ---
-      // Una vez que tenemos el token, hacemos una segunda petición a '/users/me'.
-      // Gracias al interceptor configurado en apiClient, el token se añadirá
-      // automáticamente a la cabecera 'Authorization'.
-      const userResponse = await apiClient.get('/users/me'); 
-
-      console.log('Datos del usuario:', userResponse.data);
-      
-      // Guardamos los datos completos del usuario en nuestro store de Zustand.
-      setUserData(userResponse.data);
-
-      // En este punto, el componente `App.jsx` detectará que el usuario está autenticado
-      // y lo redirigirá automáticamente al `/dashboard` gracias a React Router DOM.
-      // Por lo tanto, no necesitamos un `alert()` aquí.
-
-    } catch (err) {
-      // --- Manejo de errores ---
-      console.error('Error de login o al obtener usuario:', err);
-      
-      // Intentamos extraer un mensaje de error detallado del backend
-      if (err.response && err.response.data && err.response.data.detail) {
-        setError(err.response.data.detail); // Mensajes de error de FastAPI
-      } else if (err.message === "Network Error") {
-        setError("No se pudo conectar al servidor. Asegúrate de que el backend esté funcionando.");
-      }
-      else {
-        setError('Ocurrió un error inesperado al iniciar sesión. Revisa la consola para más detalles.');
-      }
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <h2>Iniciar Sesión</h2>
-      {/* Muestra el mensaje de error si el estado 'error' no está vacío */}
-      {error && <p style={{ color: 'red', marginBottom: '10px' }}>{error}</p>}
-      
-      <div>
-        <label htmlFor="email">Email:</label>
-        <input
-          type="email"
-          id="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label htmlFor="password">Contraseña:</label>
-        <input
-          type="password"
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
-      <button type="submit">Entrar</button>
-    </form>
-  );
+// Estilos básicos (puedes moverlos a un archivo CSS o usar styled-components)
+const styles = {
+    form: {
+        maxWidth: '400px',
+        margin: '50px auto',
+        padding: '20px',
+        border: '1px solid #ccc',
+        borderRadius: '8px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+        backgroundColor: '#f9f9f9',
+    },
+    h2: {
+        textAlign: 'center',
+        color: '#333',
+        marginBottom: '20px',
+    },
+    errorText: {
+        color: 'red',
+        textAlign: 'center',
+        marginBottom: '15px',
+    },
+    formGroup: {
+        marginBottom: '15px',
+    },
+    label: {
+        display: 'block',
+        marginBottom: '5px',
+        fontWeight: 'bold',
+        color: '#555',
+    },
+    input: {
+        width: '100%',
+        padding: '10px',
+        border: '1px solid #ddd',
+        borderRadius: '4px',
+        boxSizing: 'border-box',
+    },
+    button: {
+        width: '100%',
+        padding: '10px',
+        backgroundColor: '#007bff',
+        color: 'white',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        fontSize: '16px',
+        fontWeight: 'bold',
+    },
+    buttonHover: {
+        backgroundColor: '#0056b3',
+    },
 };
 
 export default LoginForm;

@@ -1,21 +1,30 @@
 # backend/app/schemas/task.py
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
+from typing import Optional
 
-# Schema base con los campos comunes
+# Propiedades comunes que una tarea puede tener
 class TaskBase(BaseModel):
     title: str
-    description: str | None = None
-    due_date: datetime # El endpoint esperará una fecha y hora en formato ISO (ej: "2025-10-30T23:59:00Z")
+    description: Optional[str] = None
+    due_date: datetime # La fecha de entrega de la tarea
+    course_id: int # ID del curso al que pertenece la tarea
 
-# Schema para la creación (lo que la API recibe)
+# Propiedades para la creación de una tarea (cuando el usuario envía datos)
 class TaskCreate(TaskBase):
-    pass # Por ahora, es igual al base
+    pass # No hay propiedades adicionales requeridas para la creación en este momento
 
-# Schema para leer (lo que la API devuelve)
+# Propiedades para la actualización de una tarea (algunos campos son opcionales)
+class TaskUpdate(TaskBase):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    due_date: Optional[datetime] = None
+    course_id: Optional[int] = None # Aunque un course_id no suele cambiar, lo dejamos opcional
+
+# Propiedades que la API devuelve (incluye campos generados por la BD)
 class Task(TaskBase):
     id: int
-    course_id: int
+    created_at: datetime # Fecha de creación de la tarea (generada por la BD)
 
-    class Config:
-        from_attributes = True
+    # Configuración para que Pydantic pueda leer modelos de SQLAlchemy
+    model_config = ConfigDict(from_attributes=True)
