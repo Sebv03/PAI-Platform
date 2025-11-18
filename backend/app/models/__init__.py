@@ -5,4 +5,6 @@ from .course import Course
 from .enrollment import Enrollment
 from .task import Task
 from .submission import Submission
+from .announcement import Announcement
+from .comment import Comment
 # Agrega aquí cualquier otro modelo nuevo que crees.

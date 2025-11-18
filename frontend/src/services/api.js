@@ -17,6 +17,15 @@ apiClient.interceptors.request.use(
     (config) => {
         const token = useAuthStore.getState().token; // Obtiene el token del store de Zustand
         if (token) {
+            // Validar que el token tenga el formato correcto antes de enviarlo
+            const tokenParts = token.split('.');
+            if (tokenParts.length !== 3) {
+                console.error('Token con formato incorrecto detectado:', token);
+                console.error('Token tiene', tokenParts.length, 'segmentos, debería tener 3');
+                // Limpiar el token inválido
+                useAuthStore.getState().logout();
+                return Promise.reject(new Error('Token inválido'));
+            }
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;

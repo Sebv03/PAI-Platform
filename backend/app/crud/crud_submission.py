@@ -7,12 +7,13 @@ from app.models.user import User
 from app.schemas.submission import SubmissionCreate, SubmissionUpdate
 
 # ----------------- Crear una nueva entrega -----------------
-def create_submission(db: Session, submission_in: SubmissionCreate, task_id: int, student_id: int) -> Submission:
+def create_submission(db: Session, submission_in: SubmissionCreate, task_id: int, student_id: int, file_path: Optional[str] = None) -> Submission:
     """
     Crea una nueva entrega para una tarea específica por un estudiante específico.
     """
     db_submission = Submission(
         content=submission_in.content,
+        file_path=file_path or submission_in.file_path,
         task_id=task_id,
         student_id=student_id
         # 'submitted_at' será generado automáticamente por el server_default
@@ -33,6 +34,7 @@ def get_submission_by_id(db: Session, submission_id: int) -> Optional[Submission
 def get_submissions_by_task(db: Session, task_id: int, skip: int = 0, limit: int = 100) -> List[Submission]:
     """
     Obtiene todas las entregas de una tarea específica.
+    Incluye la relación con el estudiante para acceder a su información.
     """
     return db.query(Submission).filter(Submission.task_id == task_id).offset(skip).limit(limit).all()
 
@@ -41,7 +43,10 @@ def get_submission_by_task_and_student(db: Session, task_id: int, student_id: in
     """
     Verifica si un estudiante ya entregó una tarea específica.
     """
-    return db.query(Submission).filter(Submission.task_id == task_id, Submission.student_id == student_id).first()
+    from sqlalchemy import and_
+    return db.query(Submission).filter(
+        and_(Submission.task_id == task_id, Submission.student_id == student_id)
+    ).first()
 
 # ----------------- Actualizar una entrega (para calificar) -----------------
 def update_submission(db: Session, db_submission: Submission, submission_in: SubmissionUpdate) -> Submission:

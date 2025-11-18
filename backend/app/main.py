@@ -1,59 +1,60 @@
 # backend/app/main.py
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List # Para la lista de orígenes CORS
+from fastapi.staticfiles import StaticFiles
+from typing import List
+from pathlib import Path
 
-# Importa SOLO los routers de la API. Los modelos se importan en app.db.base.py
-from app.api.endpoints import users, courses
-from app.api.endpoints.login import router as login_router # Importación explícita para login
+# Importa los routers de la API
+from app.api.endpoints import users, courses, tasks, enrollments, submissions, announcements, ml_predictions
+from app.api.endpoints.login import router as login_router
 
-# --- ¡PREPARADO PARA FUTUROS ROUTERS! ---
-from app.api.endpoints import tasks # Descomenta cuando crees tasks.py
-from app.api.endpoints import submissions # Descomenta cuando crees submissions.py
-from app.api.endpoints import enrollments # Descomenta cuando crees enrollments.py
+from app.core.config import settings # <-- Importa la configuración
+from app.db.base import Base
+from app.db.session import engine # <-- Importa el engine de la sesión
 
-
-from app.core.config import settings
-from app.db.base import Base # Necesario para Base.metadata.create_all
-from app.db.session import engine, get_db # Necesario para Base.metadata.create_all
-
-# Función para crear las tablas en la base de datos
+# --- Función para crear las tablas ---
 def create_tables():
-    # ¡Importante! Asegúrate de que todos tus modelos estén importados en
-    # app.db.base.py para que Base.metadata los detecte aquí.
-    Base.metadata.create_all(bind=engine)
+    print("Creando tablas en la base de datos...")
+    Base.metadata.create_all(bind=engine) # Usa el engine de session.py
+    print("Tablas creadas.")
 
-# Llamar a la función para crear las tablas
-# Considera usar Alembic para migraciones en producción
 create_tables()
 
+# --- Instancia de la aplicación FastAPI ---
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    title=settings.PROJECT_NAME, # <-- Usa el nombre del proyecto de config
+    openapi_url=f"{settings.API_V1_STR}/openapi.json" # <-- Usa la ruta de config
 )
 
-# Configuración de CORS
+# --- Configuración de CORS ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+    allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS], # <-- Usa los orígenes de config
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Incluir los routers de la API
+# --- Crear directorio de uploads si no existe ---
+from app.core.config import settings
+upload_dir = Path(settings.UPLOAD_DIR)
+upload_dir.mkdir(parents=True, exist_ok=True)
+
+# --- Montar directorio estático para servir archivos (opcional, para desarrollo) ---
+# En producción, usa un servidor web como Nginx para servir archivos estáticos
+# app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+
+# --- Inclusión de Routers ---
 app.include_router(login_router, prefix="/login", tags=["login"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(courses.router, prefix="/courses", tags=["courses"])
-
-# --- ¡DESCOMENTA ESTAS LÍNEAS CUANDO HAYAS CREADO LOS ARCHIVOS CORRESPONDIENTES! ---
 app.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
-app.include_router(submissions.router, prefix="/submissions", tags=["submissions"])
 app.include_router(enrollments.router, prefix="/enrollments", tags=["enrollments"])
+app.include_router(submissions.router, prefix="/submissions", tags=["submissions"])
+app.include_router(announcements.router, prefix="/announcements", tags=["announcements"])
+app.include_router(ml_predictions.router, prefix="/ml", tags=["ML Predictions"])
 
-
-# Rutas de prueba (opcional)
-@app.get("/")
+@app.get("/", tags=["Root"])
 def read_root():
-    return {"message": "Welcome to PAI Platform API v1"}
+    return {"message": "Welcome to PAI API! Visit /docs for API documentation."}

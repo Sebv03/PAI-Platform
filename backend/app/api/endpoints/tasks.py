@@ -1,8 +1,11 @@
 # backend/app/api/endpoints/tasks.py
-from fastapi import APIRouter, Depends, HTTPException, status, Response # <-- ¡Añade Response aquí!
+from fastapi import APIRouter, Depends, HTTPException, status, Response, File, UploadFile, Form # <-- Añade File, UploadFile, Form
 from sqlalchemy.orm import Session
-from typing import List, Any
+from typing import List, Any, Optional
 from datetime import datetime # Para validación de fechas
+import os
+import shutil
+from pathlib import Path
 
 from app.api import deps
 from app.crud import crud_task, crud_course # Necesitamos crud_course para verificar si el curso existe
@@ -226,7 +229,8 @@ async def delete_existing_task(
 @router.post("/{task_id}/submit", response_model=Submission, status_code=status.HTTP_201_CREATED)
 async def submit_task(
     task_id: int,
-    submission_in: SubmissionCreate,
+    file: UploadFile = File(None),
+    content: str = Form(None),
     db: Session = Depends(deps.get_db),
     current_user: UserModel = Depends(deps.get_current_user)
 ) -> Any:
@@ -268,32 +272,40 @@ async def submit_task(
             detail="Ya has entregado esta tarea. Puedes editar tu entrega existente."
         )
 
-    # 5. Crear la entrega
-    submission = crud_submission.create_submission(
-        db, submission_in=submission_in, task_id=task_id, student_id=current_user.id
-    )
-    return submission
-
-    # 3. (Aún no implementado) Verificar que el estudiante esté inscrito en el curso
-    # enrollment = crud_enrollment.get_enrollment_by_user_and_course(db, user_id=current_user.id, course_id=task.course_id)
-    # if not enrollment:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_403_FORBIDDEN,
-    #         detail="No estás inscrito en el curso de esta tarea."
-    #     )
-
-    # 4. Verificar que el estudiante no haya entregado ya esta tarea
-    existing_submission = crud_submission.get_submission_by_task_and_student(
-        db, task_id=task_id, student_id=current_user.id
-    )
-    if existing_submission:
+    # 5. Validar que se haya enviado contenido o archivo
+    if not file and not content:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ya has entregado esta tarea. Puedes editar tu entrega existente."
+            detail="Debes enviar un archivo PDF o un contenido de texto."
         )
-    
-    # 5. Crear la entrega
+
+    # 6. Manejar archivo PDF si se envió
+    file_path = None
+    if file:
+        # Validar que sea un PDF
+        if not file.filename.endswith('.pdf'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Solo se permiten archivos PDF."
+            )
+        
+        # Crear directorio de uploads si no existe
+        from app.core.config import settings
+        upload_dir = Path(settings.UPLOAD_DIR)
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Generar nombre único para el archivo
+        file_extension = Path(file.filename).suffix
+        file_name = f"task_{task_id}_student_{current_user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{file_extension}"
+        file_path = str(upload_dir / file_name)
+        
+        # Guardar el archivo
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+    # 7. Crear la entrega
+    submission_in = SubmissionCreate(content=content, file_path=file_path)
     submission = crud_submission.create_submission(
-        db, submission_in=submission_in, task_id=task_id, student_id=current_user.id
+        db, submission_in=submission_in, task_id=task_id, student_id=current_user.id, file_path=file_path
     )
     return submission

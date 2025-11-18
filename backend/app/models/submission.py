@@ -1,5 +1,5 @@
 # backend/app/models/submission.py
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text # Para el valor por defecto NOW()
 
@@ -11,7 +11,16 @@ class Submission(Base):
     id = Column(Integer, primary_key=True, index=True)
     
     # Contenido de la entrega (puede ser un texto o un enlace a un archivo)
-    content = Column(Text, nullable=True) 
+    content = Column(Text, nullable=True)
+    
+    # Ruta del archivo PDF subido (si se entrega un PDF)
+    file_path = Column(String(500), nullable=True) 
+    
+    # Calificación (nota de 1.0 a 7.0)
+    grade = Column(Float, nullable=True)
+    
+    # Feedback del docente
+    feedback = Column(Text, nullable=True)
     
     # Fecha de entrega (manejada por la base de datos)
     submitted_at = Column(DateTime(timezone=True), server_default=text("NOW()"), nullable=False)

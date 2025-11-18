@@ -1,19 +1,22 @@
 // frontend/src/components/StudentDashboard.jsx
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import apiClient from '../services/api';
+import CourseBrowser from './CourseBrowser';
 
 const StudentDashboard = ({ user }) => {
     const [enrolledCourses, setEnrolledCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showAvailableCourses, setShowAvailableCourses] = useState(false);
 
     // Función para cargar los cursos en los que el estudiante está inscrito
     const fetchEnrolledCourses = async () => {
         setLoading(true);
         setError(null);
         try {
-            // Usamos el endpoint GET /enrollments/me que creamos en el backend
-            const response = await apiClient.get('/enrollments/me');
+            // Usamos el endpoint GET /enrollments/me/courses
+            const response = await apiClient.get('/enrollments/me/courses');
             setEnrolledCourses(response.data);
         } catch (err) {
             console.error("Error al cargar cursos inscritos:", err);
@@ -30,33 +33,87 @@ const StudentDashboard = ({ user }) => {
 
     return (
         <div>
-            <h2 style={{ fontSize: '1.2em', fontWeight: '600', color: '#555', marginBottom: '15px' }}>Panel de Estudiante</h2>
+            <div style={{ marginBottom: '2rem' }}>
+                <h2>Panel de Estudiante</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: 0 }}>Gestiona tus cursos y entrega tus tareas</p>
+            </div>
             
             {/* Lista de Cursos Inscritos */}
-            <div>
-                <h3 style={{ fontSize: '1.1em', fontWeight: '600', marginBottom: '15px' }}>Mis Cursos Inscritos</h3>
-                {loading && <p>Cargando cursos...</p>}
-                {error && <p style={{ color: 'red' }}>{error}</p>}
+            <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '1.75rem', marginBottom: '1.5rem' }}>Mis Cursos Inscritos</h3>
+                {loading && (
+                    <div className="loading-container">
+                        <div className="spinner"></div>
+                        <span>Cargando cursos...</span>
+                    </div>
+                )}
+                {error && (
+                    <div className="alert alert-error">
+                        <p>{error}</p>
+                    </div>
+                )}
                 
                 {!loading && !error && enrolledCourses.length === 0 && (
-                    <p>Aún no estás inscrito en ningún curso.</p>
+                    <div className="card text-center" style={{ padding: '3rem' }}>
+                        <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Aún no estás inscrito en ningún curso.</p>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)' }}>Explora los cursos disponibles más abajo</p>
+                    </div>
                 )}
 
                 {!loading && !error && enrolledCourses.length > 0 && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-                        {enrolledCourses.map(course => (
-                            <div key={course.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '15px', backgroundColor: '#fff' }}>
-                                <h4 style={{ fontWeight: 'bold', color: '#007bff' }}>{course.title}</h4>
-                                <p style={{ fontSize: '0.9em', color: '#555' }}>{course.description}</p>
-                                {/* TODO: Añadir enlace a la página de detalles del curso */}
-                                {/* <Link to={`/courses/${course.id}`}>Ver Curso</Link> */}
-                            </div>
-                        ))}
+                    <div className="grid grid-cols-1 grid-md-2 grid-lg-3 gap-lg">
+                        {enrolledCourses.map(course => {
+                            return (
+                                <div 
+                                    key={course.id} 
+                                    className="card"
+                                    style={{ display: 'flex', flexDirection: 'column' }}
+                                >
+                                    <div style={{ marginBottom: '1rem', flex: 1 }}>
+                                        <h4 style={{ fontSize: '1.25rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>
+                                            {course.title}
+                                        </h4>
+                                        {course.description && (
+                                            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem',
+                                                display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                                {course.description}
+                                            </p>
+                                        )}
+                                    </div>
+                                    
+                                    <Link
+                                        to={`/courses/${course.id}`}
+                                        className="btn btn-primary btn-full"
+                                        style={{ textDecoration: 'none', textAlign: 'center' }}
+                                    >
+                                        Ver Curso
+                                    </Link>
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </div>
 
-            {/* TODO: Añadir sección para ver todos los cursos disponibles para inscribirse */}
+            {/* Botón para mostrar/ocultar cursos disponibles */}
+            <div style={{ marginBottom: '1.5rem' }}>
+                <button
+                    onClick={() => setShowAvailableCourses(!showAvailableCourses)}
+                    className={`btn btn-lg ${showAvailableCourses ? 'btn-danger' : 'btn-primary'}`}
+                >
+                    {showAvailableCourses ? 'Ocultar' : 'Ver'} Cursos Disponibles
+                </button>
+            </div>
+
+            {/* Componente para explorar e inscribirse en cursos */}
+            {showAvailableCourses && (
+                <CourseBrowser 
+                    onEnrollmentSuccess={() => {
+                        // Recargar los cursos inscritos cuando se inscribe en uno nuevo
+                        fetchEnrolledCourses();
+                    }}
+                />
+            )}
         </div>
     );
 };

@@ -20,6 +20,9 @@ class Course(BaseModel): # NOTA: Se llama igual que el modelo, pero es el esquem
     title: str
     description: Optional[str] = None
     owner_id: int # El ID del propietario
+    owner_name: Optional[str] = None  # Nombre del profesor
+    owner_email: Optional[str] = None  # Email del profesor
+    created_at: Optional[str] = None  # Fecha de creación
 
     # Opcional: Para incluir el objeto completo del propietario si se desea en algunas respuestas
     # owner: UserSchema # Descomentar si quieres incrustar el objeto User completo

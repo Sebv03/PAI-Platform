@@ -34,42 +34,49 @@ const TeacherDashboard = ({ user }) => {
 
     return (
         <div>
-            <h2 style={{ fontSize: '1.2em', fontWeight: '600', color: '#555', marginBottom: '15px' }}>Panel de Docente</h2>
+            <div style={{ marginBottom: '2rem' }}>
+                <h2>Panel de Docente</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: 0 }}>Gestiona tus cursos y revisa las entregas de tus estudiantes</p>
+            </div>
             
-            <div style={{ marginBottom: '30px', padding: '20px', border: '1px solid #eee', borderRadius: '8px', backgroundColor: '#fafafa' }}>
-                <h3 style={{ fontSize: '1.1em', fontWeight: '600', marginBottom: '15px' }}>Crear Nuevo Curso</h3>
+            <div className="card mb-xl bg-gradient-blue" style={{ borderColor: '#bfdbfe' }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Crear Nuevo Curso</h3>
                 <CourseCreationForm onCourseCreated={handleCourseCreated} />
             </div>
 
             <div>
-                <h3 style={{ fontSize: '1.1em', fontWeight: '600', marginBottom: '15px' }}>Mis Cursos</h3>
+                <h3 style={{ fontSize: '1.75rem', marginBottom: '1.5rem' }}>Mis Cursos</h3>
                 {loading ? (
-                    <p>Cargando cursos...</p>
+                    <div className="loading-container">
+                        <div className="spinner"></div>
+                        <span>Cargando cursos...</span>
+                    </div>
                 ) : error ? (
-                    <p style={{ color: 'red' }}>{error}</p>
+                    <div className="alert alert-error">
+                        <p>{error}</p>
+                    </div>
                 ) : courses.length === 0 ? (
-                    <p>No tienes cursos creados aún.</p>
+                    <div className="card text-center" style={{ padding: '3rem' }}>
+                        <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>No tienes cursos creados aún.</p>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)' }}>Crea tu primer curso usando el formulario de arriba</p>
+                    </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                    <div className="grid grid-cols-1 grid-md-2 grid-lg-3 gap-lg">
                         {courses.map(course => (
-                            <div key={course.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '15px', backgroundColor: '#fff' }}>
-                                <h4 style={{ fontWeight: 'bold', color: '#007bff' }}>{course.title}</h4>
-                                <p style={{ fontSize: '0.9em', color: '#555' }}>{course.description}</p>
-                                <p style={{ fontSize: '0.9em', color: '#777' }}>ID: {course.id}</p>
-                                <p style={{ fontSize: '0.8em', color: '#777' }}>Creado el: {new Date(course.created_at).toLocaleDateString()}</p>
+                            <div key={course.id} className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+                                <h4 style={{ fontSize: '1.25rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>{course.title}</h4>
+                                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem', flex: 1, 
+                                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                    {course.description || 'Sin descripción'}
+                                </p>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '1rem' }}>
+                                    <p>ID: {course.id}</p>
+                                    <p>Creado el: {new Date(course.created_at).toLocaleDateString('es-ES')}</p>
+                                </div>
                                 
-                                {/* --- ¡AQUÍ ESTÁ EL CAMBIO CLAVE! --- */}
                                 <Link 
                                     to={`/courses/${course.id}`} 
-                                    style={{ 
-                                        marginTop: '15px', 
-                                        display: 'inline-block', 
-                                        padding: '8px 12px', 
-                                        backgroundColor: '#28a745', 
-                                        color: 'white', 
-                                        textDecoration: 'none', 
-                                        borderRadius: '4px' 
-                                    }}
+                                    className="btn btn-success btn-full"
                                 >
                                     Ver Detalles / Tareas
                                 </Link>

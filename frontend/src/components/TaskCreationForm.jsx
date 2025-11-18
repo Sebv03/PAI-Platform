@@ -23,23 +23,44 @@ const TaskCreationForm = ({ courseId, onTaskCreated }) => {
             return;
         }
 
-        // Convertir la fecha al formato ISO string que el backend espera
-        // "2025-12-20T23:59:59"
-        let formattedDueDate = new Date(dueDate).toISOString().slice(0, 19); 
-        // Si el input solo da YYYY-MM-DD, añadir una hora por defecto si es necesario
-        if (!dueDate.includes('T')) {
-            formattedDueDate += 'T23:59:59'; // Añadir hora de fin de día por defecto
-        } else {
-             formattedDueDate += ':00'; // Añadir segundos si no los tiene
+        // Convertir la fecha al formato ISO 8601 que el backend espera
+        // El input datetime-local da formato "YYYY-MM-DDTHH:mm"
+        // Necesitamos convertirlo a ISO 8601 completo: "YYYY-MM-DDTHH:mm:ss"
+        let formattedDueDate;
+        
+        try {
+            // Crear un objeto Date desde el valor del input
+            const dateObj = new Date(dueDate);
+            
+            // Validar que la fecha sea válida
+            if (isNaN(dateObj.getTime())) {
+                setError("La fecha ingresada no es válida.");
+                setLoading(false);
+                return;
+            }
+            
+            // Convertir a ISO string y tomar solo la parte de fecha/hora (sin timezone)
+            // Formato: "YYYY-MM-DDTHH:mm:ss"
+            formattedDueDate = dateObj.toISOString().slice(0, 19);
+            
+            console.log('Fecha original:', dueDate);
+            console.log('Fecha formateada:', formattedDueDate);
+        } catch (dateError) {
+            console.error("Error al formatear la fecha:", dateError);
+            setError("Error al procesar la fecha. Por favor, verifica el formato.");
+            setLoading(false);
+            return;
         }
         
         try {
             const newTask = {
                 title,
-                description,
+                description: description || null, // Asegurar que sea null si está vacío
                 due_date: formattedDueDate,
                 course_id: courseId
             };
+            
+            console.log('Enviando tarea al servidor:', newTask);
             
             const response = await apiClient.post('/tasks/', newTask);
             console.log("Tarea creada:", response.data);
@@ -52,7 +73,39 @@ const TaskCreationForm = ({ courseId, onTaskCreated }) => {
             }
         } catch (err) {
             console.error("Error al crear la tarea:", err);
-            setError(err.response?.data?.detail || "Error al crear la tarea.");
+            console.error("Error response:", err.response);
+            console.error("Error data:", err.response?.data);
+            
+            // Manejar diferentes tipos de errores de FastAPI
+            let errorMessage = "Error al crear la tarea.";
+            
+            if (err.response?.data) {
+                const errorData = err.response.data;
+                
+                // Si es un error 422 (Unprocessable Entity) de Pydantic, puede venir como array
+                if (Array.isArray(errorData.detail)) {
+                    // Extraer mensajes de validación de Pydantic
+                    errorMessage = errorData.detail
+                        .map((error) => {
+                            const field = error.loc ? error.loc.join('.') : 'campo';
+                            return `${field}: ${error.msg}`;
+                        })
+                        .join(', ');
+                } else if (typeof errorData.detail === 'string') {
+                    // Si es un string simple
+                    errorMessage = errorData.detail;
+                } else if (errorData.message) {
+                    // Algunos errores pueden venir con 'message'
+                    errorMessage = errorData.message;
+                } else {
+                    // Si es un objeto, convertirlo a string legible
+                    errorMessage = JSON.stringify(errorData);
+                }
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

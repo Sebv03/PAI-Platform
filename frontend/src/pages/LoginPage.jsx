@@ -15,62 +15,139 @@ const LoginPage = () => {
         e.preventDefault();
         setError(null);
         try {
-            // Usa la función login del store para manejar la autenticación
-            await login(email, password);
-            navigate('/dashboard'); // Redirigir al dashboard al éxito
+            // --- PASO 1: Obtener el Token del servidor ---
+            const response = await apiClient.post('/login/access-token', new URLSearchParams({
+                username: email,
+                password: password,
+            }), {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            });
+
+            // Debug: Ver qué está recibiendo
+            console.log('Respuesta completa del servidor:', response);
+            console.log('response.data:', response.data);
+
+            // Validar que la respuesta tenga la estructura esperada
+            if (!response.data) {
+                console.error('ERROR: response.data es null o undefined');
+                throw new Error('Respuesta inválida del servidor');
+            }
+
+            // Extraer el token de la respuesta
+            const access_token = response.data.access_token;
+            
+            // Debug: Ver qué token se extrajo
+            console.log('Token extraído:', access_token);
+            console.log('Tipo del token:', typeof access_token);
+            
+            // Validar que el token exista y sea un string
+            if (!access_token) {
+                console.error('ERROR: access_token es null, undefined o vacío');
+                console.error('response.data completo:', JSON.stringify(response.data, null, 2));
+                throw new Error('No se recibió token del servidor');
+            }
+            
+            if (typeof access_token !== 'string') {
+                console.error('ERROR: access_token no es un string. Tipo:', typeof access_token, 'Valor:', access_token);
+                throw new Error('Token inválido recibido del servidor');
+            }
+            
+            // Verificar que el token tenga el formato JWT correcto (3 segmentos separados por puntos)
+            const tokenParts = access_token.split('.');
+            if (tokenParts.length !== 3) {
+                console.error('ERROR: Token con formato incorrecto');
+                console.error('Token recibido:', access_token);
+                console.error('Segmentos encontrados:', tokenParts.length);
+                throw new Error(`Token con formato incorrecto recibido del servidor (${tokenParts.length} segmentos en lugar de 3)`);
+            }
+            
+            console.log('✅ Token válido, guardando en localStorage...');
+            
+            // --- PASO 2: Guardar el Token usando el store ---
+            // La función login del store solo acepta el token, no email/password
+            login(access_token);
+            
+            // --- PASO 3: Redirigir al Dashboard ---
+            navigate('/dashboard');
         } catch (err) {
-            console.error("Error en el login:", err);
-            setError(err.response?.data?.detail || "Credenciales inválidas. Inténtalo de nuevo.");
+            console.error("Error completo en el login:", err);
+            console.error("Error response:", err.response);
+            console.error("Error message:", err.message);
+            
+            // Si es un error de validación del token, mostrar mensaje específico
+            if (err.message && err.message.includes('formato incorrecto')) {
+                setError("Error: El servidor retornó un token inválido. Por favor, contacta al administrador.");
+            } else if (err.response?.status === 400 || err.response?.status === 401) {
+                setError(err.response?.data?.detail || "Credenciales inválidas. Inténtalo de nuevo.");
+            } else {
+                setError(err.message || "Error al iniciar sesión. Inténtalo de nuevo.");
+            }
         }
     };
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
-            <div style={{ padding: '30px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', backgroundColor: 'white', width: '100%', maxWidth: '400px' }}>
-                <h2 style={{ textAlign: 'center', marginBottom: '25px', color: '#333' }}>Iniciar Sesión</h2>
-                <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '15px' }}>
-                    {error && <p style={{ color: 'red', textAlign: 'center', marginBottom: '15px' }}>{error}</p>}
-                    <div>
-                        <label htmlFor="email" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555' }}>Email:</label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', fontSize: '1em' }}
-                        />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-primary" style={{ padding: '1rem' }}>
+            <div className="container-sm">
+                <div className="card" style={{ maxWidth: '400px', margin: '0 auto', boxShadow: 'var(--shadow-xl)' }}>
+                    <div className="text-center mb-lg">
+                        <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Plataforma PAI</h1>
+                        <h2 style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', fontWeight: '400' }}>Iniciar Sesión</h2>
                     </div>
-                    <div>
-                        <label htmlFor="password" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555' }}>Contraseña:</label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', fontSize: '1em' }}
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        style={{ 
-                            padding: '12px 20px', 
-                            backgroundColor: '#007bff', 
-                            color: 'white', 
-                            border: 'none', 
-                            borderRadius: '5px', 
-                            fontSize: '1.1em', 
-                            cursor: 'pointer',
-                            marginTop: '10px'
-                        }}
-                    >
-                        Ingresar
-                    </button>
-                </form>
-                <p style={{ textAlign: 'center', marginTop: '20px', color: '#666' }}>
-                    ¿No tienes una cuenta? <Link to="/register" style={{ color: '#007bff', textDecoration: 'none' }}>Regístrate aquí</Link>
-                </p>
+                    
+                    {error && (
+                        <div className="alert alert-error mb-lg">
+                            <p>{error}</p>
+                        </div>
+                    )}
+                    
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label htmlFor="email" className="label">
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                className="input-field"
+                                placeholder="tu@email.com"
+                            />
+                        </div>
+                        
+                        <div className="form-group">
+                            <label htmlFor="password" className="label">
+                                Contraseña
+                            </label>
+                            <input
+                                type="password"
+                                id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="input-field"
+                                placeholder="••••••••"
+                            />
+                        </div>
+                        
+                        <button
+                            type="submit"
+                            className="btn btn-primary btn-full btn-lg"
+                        >
+                            Ingresar
+                        </button>
+                    </form>
+                    
+                    <p className="text-center" style={{ marginTop: '1.5rem', color: 'var(--text-secondary)' }}>
+                        ¿No tienes una cuenta?{' '}
+                        <Link to="/register" style={{ color: 'var(--primary)', fontWeight: '600' }}>
+                            Regístrate aquí
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     );

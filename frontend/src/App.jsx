@@ -7,7 +7,8 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './components/Dashboard';
 import HomePage from './pages/HomePage'; // Página de inicio
-import CourseDetail from './components/CourseDetail'; // <-- ¡AÑADE ESTA IMPORTACIÓN!
+import CourseDetail from './components/CourseDetail';
+import TaskDetailPage from './pages/TaskDetailPage';
 
 function App() {
   return (
@@ -20,7 +21,8 @@ function App() {
         {/* Rutas Privadas */}
         <Route element={<PrivateRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/courses/:id" element={<CourseDetail />} /> {/* <-- ¡AÑADE ESTA RUTA! */}
+          <Route path="/courses/:id" element={<CourseDetail />} />
+          <Route path="/tasks/:id" element={<TaskDetailPage />} />
         </Route>
       </Routes>
     </Router>

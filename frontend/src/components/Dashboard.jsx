@@ -7,6 +7,7 @@ import apiClient from '../services/api'; // Necesitamos apiClient aquí
 // Importamos los dashboards específicos
 import TeacherDashboard from './TeacherDashboard';
 import StudentDashboard from './StudentDashboard';
+import AdminDashboard from './AdminDashboard';
 
 const Dashboard = () => {
     // Obtenemos el usuario, el logout Y la nueva acción 'setUser'
@@ -17,18 +18,18 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                // Ahora que el token está en el store, esta llamada SÍ funcionará
+                // El interceptor de apiClient (api.js) adjuntará el token
                 const response = await apiClient.get('/users/me');
                 setUser(response.data); // Guardamos el usuario en el store
             } catch (error) {
                 console.error("Error al cargar datos del usuario:", error);
-                logout(); // Si falla (ej. token expirado), cerramos sesión
+                // Si falla (ej. token expirado o inválido), cerramos sesión
+                logout(); 
                 navigate('/login');
             }
         };
 
-        // Si tenemos token pero no datos de usuario (ej. al recargar la pág),
-        // o si acabamos de loguearnos (user es null), cargamos los datos.
+        // Si tenemos token (del login anterior) pero no datos de usuario (user es null)
         if (!user) {
             fetchUser();
         }
@@ -38,30 +39,51 @@ const Dashboard = () => {
 
     // Si el usuario aún no se ha cargado, muestra "Cargando..."
     if (!user) {
-        return <p>Cargando perfil...</p>;
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="loading-container">
+                    <div className="spinner"></div>
+                    <p>Cargando perfil...</p>
+                </div>
+            </div>
+        );
     }
 
     // Si el usuario SÍ está cargado, muestra el contenido
     return (
-        <div style={{ padding: '20px', maxWidth: '900px', margin: '20px auto' }}>
-            <nav style={{ marginBottom: '20px', borderBottom: '1px solid #ddd', paddingBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h1 style={{ fontSize: '1.5em', fontWeight: 'bold' }}>Plataforma PAI</h1>
-                <div>
-                    <span style={{ marginRight: '15px' }}>Hola, {user.full_name} ({user.role})</span>
-                    <button 
-                        onClick={logout} 
-                        style={{ padding: '8px 12px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                    >
-                        Cerrar Sesión
-                    </button>
+        <div className="min-h-screen">
+            {/* Navbar */}
+            <nav className="navbar">
+                <div className="navbar-content">
+                    <a href="/dashboard" className="navbar-brand">Plataforma PAI</a>
+                    <div className="navbar-user">
+                        <div className="text-right">
+                            <p style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-primary)' }}>{user.full_name}</p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{user.role}</p>
+                        </div>
+                        <button 
+                            onClick={logout} 
+                            className="btn btn-danger btn-sm"
+                        >
+                            Cerrar Sesión
+                        </button>
+                    </div>
                 </div>
             </nav>
 
-            {/* Renderizado Condicional basado en Rol */}
-            {user.role === 'docente' && <TeacherDashboard user={user} />}
-            {user.role === 'estudiante' && <StudentDashboard user={user} />}
-            {user.role === 'administrador' && <p>Dashboard de Administrador (En construcción)</p>}
-            {user.rowl === 'psicopedagogo' && <p>Dashboard de Psicopedagogo (En construcción)</p>}
+            {/* Contenido Principal */}
+            <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+                {/* Renderizado Condicional basado en Rol */}
+                {user.role === 'docente' && <TeacherDashboard user={user} />}
+                {user.role === 'estudiante' && <StudentDashboard user={user} />}
+                {user.role === 'administrador' && <AdminDashboard user={user} />}
+                {user.role === 'psicopedagogo' && (
+                    <div className="card">
+                        <h2>Dashboard de Psicopedagogo</h2>
+                        <p>Panel en construcción</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

@@ -64,3 +64,27 @@ def delete_course(db: Session, id: int) -> Optional[Course]:
         db.delete(db_course)
         db.commit()
     return db_course
+
+# ----------------- Obtener cursos disponibles para un estudiante (no inscritos) -----------------
+def get_available_courses_for_student(db: Session, student_id: int, skip: int = 0, limit: int = 100) -> List[Course]:
+    """
+    Obtiene la lista de cursos a los que un estudiante NO está inscrito.
+    Excluye los cursos que el estudiante ya tiene inscritos.
+    """
+    from app.models.enrollment import Enrollment
+    
+    # Obtener los IDs de cursos en los que el estudiante ya está inscrito
+    enrolled_enrollments = db.query(Enrollment.course_id).filter(
+        Enrollment.student_id == student_id
+    ).all()
+    
+    enrolled_course_ids = [enrollment[0] for enrollment in enrolled_enrollments]
+    
+    # Si no hay cursos inscritos, devolver todos los cursos
+    if not enrolled_course_ids:
+        return db.query(Course).offset(skip).limit(limit).all()
+    
+    # Query principal: Todos los cursos excepto los ya inscritos
+    return db.query(Course).filter(
+        ~Course.id.in_(enrolled_course_ids)
+    ).offset(skip).limit(limit).all()
