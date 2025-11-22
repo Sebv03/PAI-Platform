@@ -3,7 +3,8 @@ import axios from 'axios';
 import useAuthStore from '../store/authStore'; // Importa tu store de Zustand
 
 // Define la URL base de tu API de FastAPI
-export const API_BASE_URL = 'http://localhost:8000';
+// En producción, esto se configura mediante variables de entorno en el build
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const apiClient = axios.create({
     baseURL: API_BASE_URL,

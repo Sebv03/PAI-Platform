@@ -407,6 +407,59 @@ textarea {
 }
 
 /* ============================================
+   RANGE INPUT (SLIDER)
+   ============================================ */
+.input-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border-color);
+  outline: none;
+  margin: 10px 0;
+  transition: background var(--transition-base);
+}
+
+.input-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  transition: background var(--transition-base), transform var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.input-range::-webkit-slider-thumb:hover {
+  background: var(--primary-dark);
+  transform: scale(1.1);
+}
+
+.input-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  border: none;
+  transition: background var(--transition-base), transform var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.input-range::-moz-range-thumb:hover {
+  background: var(--primary-dark);
+  transform: scale(1.1);
+}
+
+.input-range:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* ============================================
    BADGES
    ============================================ */
 .badge {

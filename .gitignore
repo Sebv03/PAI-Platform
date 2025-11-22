@@ -18,6 +18,8 @@ __pycache__/
 # Archivos de entorno local (si los usas, ej. para variables de DB)
 .env
 .env.local
+.env.production
+.env.example
 
 # Logs
 *.log

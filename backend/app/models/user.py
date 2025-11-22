@@ -27,3 +27,4 @@ class User(Base):
     submissions = relationship("Submission", back_populates="student")
     announcements = relationship("Announcement", back_populates="author")
     comments = relationship("Comment", back_populates="author")
+    student_profile = relationship("StudentProfile", back_populates="student", uselist=False)

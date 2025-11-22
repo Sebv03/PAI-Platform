@@ -25,8 +25,9 @@ class DataService:
         Obtiene todos los datos históricos necesarios para entrenar el modelo.
         Incluye todas las tareas (entregadas y no entregadas) para calcular correctamente
         la tasa de no entrega.
+        También incluye datos del perfil del estudiante (cuestionario).
         Retorna un DataFrame con: student_id, course_id, task_id, due_date, 
-        submitted_at, grade, etc.
+        submitted_at, grade, y datos del perfil del estudiante.
         """
         query = text("""
             SELECT 
@@ -38,10 +39,19 @@ class DataService:
                 e.enrollment_date,
                 s.id as submission_id,
                 s.submitted_at,
-                s.grade
+                s.grade,
+                sp.motivation,
+                sp.available_time,
+                sp.sleep_hours,
+                sp.study_hours,
+                sp.enjoyment_studying,
+                sp.study_place_tranquility,
+                sp.academic_pressure,
+                sp.gender
             FROM tasks t
             INNER JOIN enrollments e ON t.course_id = e.course_id
             LEFT JOIN submissions s ON s.task_id = t.id AND s.student_id = e.student_id
+            LEFT JOIN student_profiles sp ON sp.student_id = e.student_id
             ORDER BY e.student_id, t.course_id, t.due_date
         """)
         
@@ -55,7 +65,7 @@ class DataService:
     def get_student_course_data(self, student_id: int, course_id: int) -> pd.DataFrame:
         """
         Obtiene los datos de un estudiante específico en un curso específico
-        Incluye todas las tareas (entregadas y no entregadas)
+        Incluye todas las tareas (entregadas y no entregadas) y datos del perfil
         """
         query = text("""
             SELECT 
@@ -67,10 +77,19 @@ class DataService:
                 e.enrollment_date,
                 s.id as submission_id,
                 s.submitted_at,
-                s.grade
+                s.grade,
+                sp.motivation,
+                sp.available_time,
+                sp.sleep_hours,
+                sp.study_hours,
+                sp.enjoyment_studying,
+                sp.study_place_tranquility,
+                sp.academic_pressure,
+                sp.gender
             FROM tasks t
             INNER JOIN enrollments e ON t.course_id = e.course_id
             LEFT JOIN submissions s ON s.task_id = t.id AND s.student_id = e.student_id
+            LEFT JOIN student_profiles sp ON sp.student_id = e.student_id
             WHERE e.student_id = :student_id 
                 AND t.course_id = :course_id
             ORDER BY t.due_date
@@ -90,7 +109,7 @@ class DataService:
     def get_course_students_data(self, course_id: int) -> pd.DataFrame:
         """
         Obtiene los datos de todos los estudiantes en un curso
-        Incluye todas las tareas (entregadas y no entregadas)
+        Incluye todas las tareas (entregadas y no entregadas) y datos del perfil
         """
         query = text("""
             SELECT 
@@ -102,10 +121,19 @@ class DataService:
                 e.enrollment_date,
                 s.id as submission_id,
                 s.submitted_at,
-                s.grade
+                s.grade,
+                sp.motivation,
+                sp.available_time,
+                sp.sleep_hours,
+                sp.study_hours,
+                sp.enjoyment_studying,
+                sp.study_place_tranquility,
+                sp.academic_pressure,
+                sp.gender
             FROM tasks t
             INNER JOIN enrollments e ON t.course_id = e.course_id
             LEFT JOIN submissions s ON s.task_id = t.id AND s.student_id = e.student_id
+            LEFT JOIN student_profiles sp ON sp.student_id = e.student_id
             WHERE t.course_id = :course_id
             ORDER BY e.student_id, t.due_date
         """)

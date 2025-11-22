@@ -1,0 +1,1515 @@
+================================================================================
+                    DOCUMENTACION COMPLETA DE LA PLATAFORMA
+                    PLATAFORMA ACADEMICA INTELIGENTE (PAI)
+================================================================================
+
+VERSION: 1.0.0
+FECHA: Noviembre 2024
+AUTOR: PAI Platform Development Team
+
+================================================================================
+                            INDICE DE CONTENIDOS
+================================================================================
+
+1. INTRODUCCION GENERAL
+   1.1. Que es la Plataforma PAI
+   1.2. Objetivos Principales
+   1.3. Arquitectura General
+
+2. ARQUITECTURA DEL SISTEMA
+   2.1. Arquitectura General
+   2.2. Componentes Principales
+   2.3. Stack Tecnologico
+   2.4. Flujo de Datos
+
+3. BACKEND (API REST - FastAPI)
+   3.1. Estructura del Backend
+   3.2. Modelos de Base de Datos
+   3.3. Endpoints y Rutas
+   3.4. Autenticacion y Autorizacion
+   3.5. Servicios
+
+4. FRONTEND (React + Vite)
+   4.1. Estructura del Frontend
+   4.2. Componentes Principales
+   4.3. Routing y Navegacion
+   4.4. Estado Global (Zustand)
+   4.5. Servicios de API
+
+5. BASE DE DATOS (PostgreSQL)
+   5.1. Esquema de Base de Datos
+   5.2. Relaciones entre Tablas
+   5.3. Migraciones
+
+6. MICROSERVICIO ML (Machine Learning)
+   6.1. Arquitectura del ML Service
+   6.2. Feature Engineering
+   6.3. Modelo de Prediccion
+   6.4. Endpoints del ML Service
+
+7. ROLES Y PERMISOS
+   7.1. Roles del Sistema
+   7.2. Permisos por Rol
+   7.3. Flujos de Trabajo por Rol
+
+8. FUNCIONALIDADES DETALLADAS
+   8.1. Gestion de Cursos
+   8.2. Gestion de Tareas
+   8.3. Sistema de Entregas
+   8.4. Sistema de Calificaciones
+   8.5. Foro/Comunicados
+   8.6. Predicciones ML
+
+9. SEGURIDAD
+   9.1. Autenticacion JWT
+   9.2. Autorizacion
+   9.3. CORS
+   9.4. Validacion de Datos
+
+10. DESPLIEGUE Y CONFIGURACION
+    10.1. Requisitos del Sistema
+    10.2. Instalacion Local
+    10.3. Despliegue en Produccion
+    10.4. Variables de Entorno
+
+11. FLUJOS DE TRABAJO COMPLETOS
+    11.1. Flujo: Docente Crea Curso
+    11.2. Flujo: Estudiante se Inscribe
+    11.3. Flujo: Docente Crea Tarea
+    11.4. Flujo: Estudiante Entrega Tarea
+    11.5. Flujo: Docente Califica
+    11.6. Flujo: Prediccion de Riesgo
+
+12. DETALLES TECNICOS AVANZADOS
+    12.1. Feature Engineering Detallado
+    12.2. Algoritmo de ML
+    12.3. Optimizaciones
+    12.4. Manejo de Errores
+
+================================================================================
+                        1. INTRODUCCION GENERAL
+================================================================================
+
+1.1. QUE ES LA PLATAFORMA PAI
+
+La Plataforma Academica Inteligente (PAI) es un sistema web completo para la
+gestion academica que integra:
+
+- Gestion de cursos, tareas y estudiantes
+- Sistema de entregas y calificaciones
+- Foro/comunicados para interaccion docente-estudiante
+- Machine Learning para prediccion de riesgo academico
+
+Es una plataforma full-stack que permite a docentes gestionar sus cursos y
+tareas, a estudiantes entregar trabajos y recibir calificaciones, y a
+administradores obtener insights sobre el rendimiento academico mediante ML.
+
+1.2. OBJETIVOS PRINCIPALES
+
+- Facilitar la gestion de cursos y tareas academicas
+- Proporcionar un sistema intuitivo de entregas y calificaciones
+- Implementar comunicacion entre docentes y estudiantes
+- Predecir estudiantes en riesgo academico usando Machine Learning
+- Ofrecer una interfaz moderna y profesional
+
+1.3. ARQUITECTURA GENERAL
+
+La plataforma sigue una arquitectura de microservicios con:
+
+- BACKEND: API REST en FastAPI (Puerto 8000)
+- FRONTEND: Aplicacion React con Vite (Puerto 5173)
+- BASE DE DATOS: PostgreSQL (Puerto 5433)
+- ML SERVICE: Microservicio FastAPI separado (Puerto 8001)
+
+Cada componente se comunica via HTTP/REST y puede desplegarse
+independientemente.
+
+================================================================================
+                      2. ARQUITECTURA DEL SISTEMA
+================================================================================
+
+2.1. ARQUITECTURA GENERAL
+
+┌─────────────────────────────────────────────────────────────────┐
+│                         FRONTEND (React)                        │
+│                    http://localhost:5173                        │
+│  - React + Vite                                                 │
+│  - Zustand (State Management)                                   │
+│  - React Router DOM                                             │
+│  - Axios (HTTP Client)                                          │
+└────────────────────────┬────────────────────────────────────────┘
+                         │ HTTP Requests
+                         │ (JSON)
+                         ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      BACKEND (FastAPI)                          │
+│                    http://localhost:8000                        │
+│  - FastAPI Framework                                            │
+│  - SQLAlchemy (ORM)                                             │
+│  - Pydantic (Validacion)                                        │
+│  - JWT Authentication                                           │
+└────────┬────────────────────────┬───────────────────────────────┘
+         │                        │
+         │ SQL                    │ HTTP Requests
+         ↓                        ↓
+┌──────────────────┐    ┌─────────────────────────────────────────┐
+│   PostgreSQL     │    │         ML SERVICE (FastAPI)            │
+│  localhost:5433  │    │       http://localhost:8001             │
+│                  │    │  - RandomForest Classifier              │
+│  - Users         │    │  - Feature Engineering                  │
+│  - Courses       │    │  - Risk Prediction                      │
+│  - Tasks         │    │                                         │
+│  - Submissions   │    │                                         │
+│  - Enrollments   │    │                                         │
+│  - Announcements │    │                                         │
+└──────────────────┘    └─────────────────────────────────────────┘
+
+2.2. COMPONENTES PRINCIPALES
+
+1. FRONTEND (React)
+   - Interfaz de usuario completa
+   - Dashboard para cada rol
+   - Formularios de gestion
+   - Visualizacion de datos
+
+2. BACKEND (FastAPI)
+   - API REST completa
+   - Logica de negocio
+   - Autenticacion y autorizacion
+   - Validacion de datos
+
+3. BASE DE DATOS (PostgreSQL)
+   - Almacenamiento persistente
+   - Relaciones entre entidades
+   - Integridad referencial
+
+4. ML SERVICE (FastAPI)
+   - Entrenamiento de modelos
+   - Prediccion de riesgo
+   - Feature engineering
+
+2.3. STACK TECNOLOGICO
+
+BACKEND:
+- Python 3.11+
+- FastAPI (Framework web)
+- SQLAlchemy (ORM)
+- Pydantic (Validacion)
+- PostgreSQL (Base de datos)
+- JWT (Autenticacion)
+- bcrypt (Hashing de passwords)
+- uvicorn (ASGI server)
+
+FRONTEND:
+- Node.js 18+
+- React 18+
+- Vite (Build tool)
+- React Router DOM (Routing)
+- Zustand (State management)
+- Axios (HTTP client)
+- CSS puro (Styling)
+
+ML SERVICE:
+- Python 3.11+
+- FastAPI
+- scikit-learn (Machine Learning)
+- pandas (Data processing)
+- numpy (Numerical operations)
+
+BASE DE DATOS:
+- PostgreSQL 15
+
+2.4. FLUJO DE DATOS
+
+1. Usuario accede al frontend
+2. Frontend hace request HTTP al backend
+3. Backend valida autenticacion (JWT)
+4. Backend consulta/modifica base de datos
+5. Backend responde con JSON
+6. Frontend actualiza la interfaz
+7. Para predicciones ML: Backend consulta ML Service
+
+================================================================================
+                    3. BACKEND (API REST - FastAPI)
+================================================================================
+
+3.1. ESTRUCTURA DEL BACKEND
+
+backend/
+├── app/
+│   ├── api/
+│   │   └── endpoints/
+│   │       ├── login.py          # Autenticacion
+│   │       ├── users.py          # Gestion de usuarios
+│   │       ├── courses.py        # Gestion de cursos
+│   │       ├── tasks.py          # Gestion de tareas
+│   │       ├── submissions.py    # Gestion de entregas
+│   │       ├── enrollments.py    # Gestion de inscripciones
+│   │       ├── announcements.py  # Foro/comunicados
+│   │       └── ml_predictions.py # Predicciones ML
+│   ├── core/
+│   │   ├── config.py             # Configuracion
+│   │   └── security.py           # Seguridad (JWT, hashing)
+│   ├── crud/
+│   │   ├── crud_user.py
+│   │   ├── crud_course.py
+│   │   ├── crud_task.py
+│   │   ├── crud_submission.py
+│   │   ├── crud_enrollment.py
+│   │   ├── crud_announcement.py
+│   │   └── crud_comment.py
+│   ├── db/
+│   │   ├── base.py               # Base para modelos
+│   │   └── session.py            # Sesion de BD
+│   ├── models/
+│   │   ├── user.py               # Modelo Usuario
+│   │   ├── course.py             # Modelo Curso
+│   │   ├── task.py               # Modelo Tarea
+│   │   ├── submission.py         # Modelo Entrega
+│   │   ├── enrollment.py         # Modelo Inscripcion
+│   │   ├── announcement.py       # Modelo Comunicado
+│   │   └── comment.py            # Modelo Comentario
+│   ├── schemas/
+│   │   ├── user.py               # Esquemas Pydantic
+│   │   ├── course.py
+│   │   ├── task.py
+│   │   ├── submission.py
+│   │   ├── enrollment.py
+│   │   ├── announcement.py
+│   │   └── token.py
+│   ├── services/
+│   │   └── ml_service.py         # Cliente ML Service
+│   └── main.py                   # Aplicacion principal
+
+3.2. MODELOS DE BASE DE DATOS
+
+3.2.1. USUARIO (User)
+   - id: Integer (PK)
+   - email: String (Unique)
+   - full_name: String
+   - hashed_password: String
+   - role: Enum (ESTUDIANTE, DOCENTE, ADMINISTRADOR)
+   - is_active: Boolean
+   - created_at: DateTime
+
+3.2.2. CURSO (Course)
+   - id: Integer (PK)
+   - title: String
+   - description: String
+   - owner_id: Integer (FK -> User.id)
+   - created_at: DateTime
+
+3.2.3. TAREA (Task)
+   - id: Integer (PK)
+   - title: String
+   - description: String
+   - course_id: Integer (FK -> Course.id)
+   - due_date: DateTime
+   - created_at: DateTime
+
+3.2.4. ENTREGA (Submission)
+   - id: Integer (PK)
+   - student_id: Integer (FK -> User.id)
+   - task_id: Integer (FK -> Task.id)
+   - content: String
+   - file_path: String (Optional)
+   - submitted_at: DateTime
+   - grade: Float (Optional)
+   - feedback: String (Optional)
+
+3.2.5. INSCRIPCION (Enrollment)
+   - id: Integer (PK)
+   - student_id: Integer (FK -> User.id)
+   - course_id: Integer (FK -> Course.id)
+   - enrollment_date: DateTime
+
+3.2.6. COMUNICADO (Announcement)
+   - id: Integer (PK)
+   - title: String
+   - content: String
+   - course_id: Integer (FK -> Course.id)
+   - author_id: Integer (FK -> User.id)
+   - created_at: DateTime
+   - updated_at: DateTime
+
+3.2.7. COMENTARIO (Comment)
+   - id: Integer (PK)
+   - content: String
+   - announcement_id: Integer (FK -> Announcement.id)
+   - author_id: Integer (FK -> User.id)
+   - created_at: DateTime
+
+3.3. ENDPOINTS Y RUTAS
+
+BASE URL: http://localhost:8000/api/v1
+
+AUTENTICACION:
+- POST /login/access-token
+  Descripcion: Obtener token JWT
+  Body: username (email), password
+  Respuesta: { access_token, token_type }
+
+USUARIOS:
+- GET /users/me
+  Descripcion: Obtener usuario actual
+  Auth: Requerida
+  Respuesta: User object
+
+- GET /users/
+  Descripcion: Listar usuarios (Admin)
+  Auth: Requerida (Admin)
+
+- POST /users/
+  Descripcion: Crear usuario
+  Auth: Requerida
+
+CURSOS:
+- GET /courses/
+  Descripcion: Listar todos los cursos
+  Auth: Requerida
+  Respuesta: Lista de cursos
+
+- POST /courses/
+  Descripcion: Crear curso (Docente)
+  Auth: Requerida (Docente)
+  Body: title, description
+
+- GET /courses/my-courses
+  Descripcion: Cursos del usuario actual
+  Auth: Requerida
+  Respuesta: Lista de cursos del usuario
+
+- GET /courses/available
+  Descripcion: Cursos disponibles para inscribirse (Estudiante)
+  Auth: Requerida (Estudiante)
+
+- GET /courses/{course_id}
+  Descripcion: Detalles de un curso
+  Auth: Requerida
+  Respuesta: Curso con detalles
+
+- PUT /courses/{course_id}
+  Descripcion: Actualizar curso (Owner)
+  Auth: Requerida (Owner)
+
+- DELETE /courses/{course_id}
+  Descripcion: Eliminar curso (Owner)
+  Auth: Requerida (Owner)
+
+TAREAS:
+- GET /tasks/course/{course_id}
+  Descripcion: Tareas de un curso
+  Auth: Requerida
+  Respuesta: Lista de tareas
+
+- POST /tasks/
+  Descripcion: Crear tarea (Docente)
+  Auth: Requerida (Docente)
+  Body: title, description, course_id, due_date
+
+- PUT /tasks/{task_id}
+  Descripcion: Actualizar tarea (Owner)
+  Auth: Requerida (Owner)
+
+- DELETE /tasks/{task_id}
+  Descripcion: Eliminar tarea (Owner)
+  Auth: Requerida (Owner)
+
+ENTREGAS:
+- GET /submissions/task/{task_id}
+  Descripcion: Entregas de una tarea (Docente)
+  Auth: Requerida (Docente)
+
+- POST /submissions/
+  Descripcion: Crear entrega (Estudiante)
+  Auth: Requerida (Estudiante)
+  Body: task_id, content, file (opcional)
+
+- GET /submissions/my-submissions
+  Descripcion: Mis entregas (Estudiante)
+  Auth: Requerida (Estudiante)
+
+- PUT /submissions/{submission_id}/grade
+  Descripcion: Calificar entrega (Docente)
+  Auth: Requerida (Docente)
+  Body: grade, feedback
+
+INSCRIPCIONES:
+- POST /enrollments/enroll/{course_id}
+  Descripcion: Inscribirse en curso (Estudiante)
+  Auth: Requerida (Estudiante)
+
+- GET /enrollments/my-courses
+  Descripcion: Mis cursos inscritos (Estudiante)
+  Auth: Requerida (Estudiante)
+
+- DELETE /enrollments/unenroll/{course_id}
+  Descripcion: Desinscribirse (Estudiante)
+  Auth: Requerida (Estudiante)
+
+COMUNICADOS:
+- GET /announcements/course/{course_id}
+  Descripcion: Comunicados de un curso
+  Auth: Requerida
+  Respuesta: Lista de comunicados con comentarios
+
+- POST /announcements/
+  Descripcion: Crear comunicado (Docente)
+  Auth: Requerida (Docente)
+  Body: title, content, course_id
+
+- PUT /announcements/{announcement_id}
+  Descripcion: Actualizar comunicado (Author)
+  Auth: Requerida (Author)
+
+- DELETE /announcements/{announcement_id}
+  Descripcion: Eliminar comunicado (Author)
+  Auth: Requerida (Author)
+
+- POST /announcements/{announcement_id}/comments
+  Descripcion: Crear comentario (Cualquier usuario)
+  Auth: Requerida
+  Body: content
+
+- DELETE /announcements/comments/{comment_id}
+  Descripcion: Eliminar comentario (Author o Docente)
+  Auth: Requerida
+
+PREDICCIONES ML:
+- GET /ml/student/{student_id}/course/{course_id}
+  Descripcion: Prediccion de riesgo para un estudiante
+  Auth: Requerida
+  Respuesta: { risk_level, risk_score, features, confidence }
+
+- GET /ml/course/{course_id}
+  Descripcion: Predicciones para todos los estudiantes de un curso
+  Auth: Requerida (Admin/Docente)
+  Respuesta: Lista de predicciones
+
+- POST /ml/train
+  Descripcion: Entrenar modelo ML
+  Auth: Requerida (Admin)
+  Respuesta: { status, accuracy, precision, recall, f1_score }
+
+3.4. AUTENTICACION Y AUTORIZACION
+
+AUTENTICACION JWT:
+- El usuario inicia sesion con email y password
+- El backend valida credenciales usando bcrypt
+- Si son correctas, genera un token JWT
+- El token contiene: user_id, email, role
+- El token expira en 30 minutos (configurable)
+- El frontend almacena el token en localStorage
+
+FLUJO DE AUTENTICACION:
+1. POST /login/access-token con email y password
+2. Backend verifica hashed_password
+3. Backend genera JWT token
+4. Backend retorna { access_token, token_type: "bearer" }
+5. Frontend guarda token en localStorage
+6. Frontend incluye token en header: Authorization: Bearer {token}
+7. Backend valida token en cada request protegido
+
+AUTORIZACION POR ROLES:
+- Los endpoints verifican el rol del usuario
+- ESTUDIANTE: Puede ver cursos, entregar tareas, ver comunicados
+- DOCENTE: Todo lo anterior + crear cursos, crear tareas, calificar
+- ADMINISTRADOR: Todo + gestionar usuarios, ver predicciones ML
+
+VALIDACION DE PERMISOS:
+- Cada endpoint verifica permisos usando dependencias de FastAPI
+- get_current_user: Obtiene usuario del token JWT
+- get_current_active_user: Verifica que usuario este activo
+- Verificaciones adicionales: Owner, Admin, etc.
+
+3.5. SERVICIOS
+
+3.5.1. ML SERVICE CLIENT
+   Ubicacion: app/services/ml_service.py
+   
+   Funcionalidad:
+   - Cliente HTTP para comunicarse con ML Service
+   - Usa httpx para requests asincronos
+   - Maneja errores y timeouts
+   - Retorna predicciones formateadas
+
+   Metodos:
+   - get_student_risk(student_id, course_id)
+   - get_course_risks(course_id)
+   - train_model()
+
+================================================================================
+                    4. FRONTEND (React + Vite)
+================================================================================
+
+4.1. ESTRUCTURA DEL FRONTEND
+
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── Dashboard.jsx              # Dashboard principal
+│   │   ├── AdminDashboard.jsx         # Dashboard admin
+│   │   ├── TeacherDashboard.jsx       # Dashboard docente
+│   │   ├── StudentDashboard.jsx       # Dashboard estudiante
+│   │   ├── CourseDetail.jsx           # Detalles de curso
+│   │   ├── CourseCreationForm.jsx     # Form crear curso
+│   │   ├── TaskCreationForm.jsx       # Form crear tarea
+│   │   ├── SubmissionsList.jsx        # Lista de entregas
+│   │   ├── ForumSection.jsx           # Foro/comunicados
+│   │   ├── EnrolledStudentsTable.jsx  # Tabla estudiantes
+│   │   └── ...
+│   ├── pages/
+│   │   ├── HomePage.jsx               # Pagina inicio
+│   │   ├── LoginPage.jsx              # Pagina login
+│   │   ├── RegisterPage.jsx           # Pagina registro
+│   │   └── TaskDetailPage.jsx         # Detalles de tarea
+│   ├── services/
+│   │   └── api.js                     # Cliente HTTP
+│   ├── store/
+│   │   └── authStore.js               # Estado auth (Zustand)
+│   ├── utils/
+│   │   └── PrivateRoute.jsx           # Ruta protegida
+│   ├── App.jsx                        # Componente principal
+│   ├── main.jsx                       # Entry point
+│   └── index.css                      # Estilos globales
+
+4.2. COMPONENTES PRINCIPALES
+
+4.2.1. DASHBOARD
+   Componente: Dashboard.jsx
+   
+   Funcionalidad:
+   - Renderiza dashboard segun rol del usuario
+   - AdminDashboard para administradores
+   - TeacherDashboard para docentes
+   - StudentDashboard para estudiantes
+
+4.2.2. ADMIN DASHBOARD
+   Componente: AdminDashboard.jsx
+   
+   Funcionalidades:
+   - Ver todos los cursos de la plataforma
+   - Ver predicciones de riesgo por curso
+   - Crear curso de prueba y asignar usuarios
+   - Tabla de estudiantes con niveles de riesgo
+
+4.2.3. TEACHER DASHBOARD
+   Componente: TeacherDashboard.jsx
+   
+   Funcionalidades:
+   - Ver cursos del docente
+   - Crear nuevos cursos
+   - Ver detalles de cada curso
+   - Acceso a gestion de tareas y entregas
+
+4.2.4. STUDENT DASHBOARD
+   Componente: StudentDashboard.jsx
+   
+   Funcionalidades:
+   - Ver cursos inscritos
+   - Ver cursos disponibles para inscribirse
+   - Inscribirse en cursos
+   - Acceso a tareas y entregas
+
+4.2.5. COURSE DETAIL
+   Componente: CourseDetail.jsx
+   
+   Funcionalidades:
+   - Mostrar informacion del curso
+   - Lista de tareas del curso
+   - Para docentes: Tabla de estudiantes inscritos
+   - Para estudiantes: Botones para entregar/ver tareas
+   - Seccion de foro/comunicados
+
+4.2.6. FORUM SECTION
+   Componente: ForumSection.jsx
+   
+   Funcionalidades:
+   - Mostrar comunicados del curso
+   - Docentes: Crear, editar, eliminar comunicados
+   - Todos: Ver comentarios y responder
+   - Orden cronologico de comunicados
+
+4.2.7. SUBMISSIONS LIST
+   Componente: SubmissionsList.jsx
+   
+   Funcionalidades:
+   - Lista de entregas de una tarea
+   - Para docentes: Formulario de calificacion
+   - Mostrar estado (pendiente, calificado)
+   - Feedback y notas
+
+4.3. ROUTING Y NAVEGACION
+
+Rutas definidas en App.jsx:
+
+- / : HomePage (publica)
+- /login : LoginPage (publica)
+- /register : RegisterPage (publica)
+- /dashboard : Dashboard (protegida)
+- /courses/:id : CourseDetail (protegida)
+- /tasks/:id : TaskDetailPage (protegida)
+
+PRIVATE ROUTE:
+- Componente PrivateRoute.jsx verifica autenticacion
+- Redirige a /login si no hay token
+- Verifica que el token sea valido
+
+4.4. ESTADO GLOBAL (Zustand)
+
+Store: authStore.js
+
+Estado:
+- user: Objeto usuario actual
+- token: Token JWT
+- isAuthenticated: Boolean
+
+Funciones:
+- login(token, user): Guarda token y usuario
+- logout(): Limpia token y usuario
+- setUser(user): Actualiza usuario
+
+Uso:
+- Los componentes acceden al estado con useAuthStore()
+- El token se incluye automaticamente en requests HTTP
+
+4.5. SERVICIOS DE API
+
+Archivo: services/api.js
+
+Cliente HTTP configurado:
+- Base URL: http://localhost:8000
+- Headers: Content-Type: application/json
+- Interceptor: Agrega token JWT automaticamente
+- Interceptor de respuesta: Maneja errores 401 (logout)
+
+Metodos principales:
+- apiClient.get(url)
+- apiClient.post(url, data)
+- apiClient.put(url, data)
+- apiClient.delete(url)
+
+================================================================================
+                    5. BASE DE DATOS (PostgreSQL)
+================================================================================
+
+5.1. ESQUEMA DE BASE DE DATOS
+
+Tabla: users
+- id (PK, Serial)
+- email (Unique, String)
+- full_name (String)
+- hashed_password (String)
+- role (Enum: ESTUDIANTE, DOCENTE, ADMINISTRADOR)
+- is_active (Boolean, default True)
+- created_at (DateTime)
+
+Tabla: courses
+- id (PK, Serial)
+- title (String)
+- description (String)
+- owner_id (FK -> users.id)
+- created_at (DateTime)
+
+Tabla: tasks
+- id (PK, Serial)
+- title (String)
+- description (String)
+- course_id (FK -> courses.id, ON DELETE CASCADE)
+- due_date (DateTime)
+- created_at (DateTime)
+
+Tabla: enrollments
+- id (PK, Serial)
+- student_id (FK -> users.id)
+- course_id (FK -> courses.id)
+- enrollment_date (DateTime)
+- Unique constraint: (student_id, course_id)
+
+Tabla: submissions
+- id (PK, Serial)
+- student_id (FK -> users.id)
+- task_id (FK -> tasks.id)
+- content (String)
+- file_path (String, Optional)
+- submitted_at (DateTime)
+- grade (Float, Optional)
+- feedback (String, Optional)
+- Unique constraint: (student_id, task_id)
+
+Tabla: announcements
+- id (PK, Serial)
+- title (String)
+- content (String)
+- course_id (FK -> courses.id, ON DELETE CASCADE)
+- author_id (FK -> users.id)
+- created_at (DateTime)
+- updated_at (DateTime)
+
+Tabla: comments
+- id (PK, Serial)
+- content (String)
+- announcement_id (FK -> announcements.id, ON DELETE CASCADE)
+- author_id (FK -> users.id)
+- created_at (DateTime)
+
+5.2. RELACIONES ENTRE TABLAS
+
+USERS -> COURSES (One-to-Many)
+  Un usuario (docente) puede tener muchos cursos
+  Relacion: courses.owner_id -> users.id
+
+COURSES -> TASKS (One-to-Many)
+  Un curso puede tener muchas tareas
+  Relacion: tasks.course_id -> courses.id
+  CASCADE: Si se elimina curso, se eliminan tareas
+
+COURSES -> ENROLLMENTS (One-to-Many)
+  Un curso puede tener muchas inscripciones
+  Relacion: enrollments.course_id -> courses.id
+
+USERS -> ENROLLMENTS (One-to-Many)
+  Un estudiante puede estar inscrito en muchos cursos
+  Relacion: enrollments.student_id -> users.id
+
+USERS -> SUBMISSIONS (One-to-Many)
+  Un estudiante puede hacer muchas entregas
+  Relacion: submissions.student_id -> users.id
+
+TASKS -> SUBMISSIONS (One-to-Many)
+  Una tarea puede tener muchas entregas
+  Relacion: submissions.task_id -> tasks.id
+
+COURSES -> ANNOUNCEMENTS (One-to-Many)
+  Un curso puede tener muchos comunicados
+  Relacion: announcements.course_id -> courses.id
+  CASCADE: Si se elimina curso, se eliminan comunicados
+
+USERS -> ANNOUNCEMENTS (One-to-Many)
+  Un usuario puede crear muchos comunicados
+  Relacion: announcements.author_id -> users.id
+
+ANNOUNCEMENTS -> COMMENTS (One-to-Many)
+  Un comunicado puede tener muchos comentarios
+  Relacion: comments.announcement_id -> announcements.id
+  CASCADE: Si se elimina comunicado, se eliminan comentarios
+
+USERS -> COMMENTS (One-to-Many)
+  Un usuario puede hacer muchos comentarios
+  Relacion: comments.author_id -> users.id
+
+5.3. MIGRACIONES
+
+Las tablas se crean automaticamente usando SQLAlchemy:
+- Al iniciar el backend, se ejecuta Base.metadata.create_all()
+- Las tablas se crean si no existen
+- Las relaciones se establecen automaticamente
+
+Scripts adicionales:
+- add_grade_columns.py: Agrega columnas grade y feedback a submissions
+- add_forum_tables.py: Crea tablas announcements y comments
+- add_file_path_column.py: Agrega columna file_path a submissions
+
+================================================================================
+                 6. MICROSERVICIO ML (Machine Learning)
+================================================================================
+
+6.1. ARQUITECTURA DEL ML SERVICE
+
+El ML Service es un microservicio independiente que corre en el puerto 8001.
+
+Estructura:
+ml-service/
+├── main.py                    # Aplicacion FastAPI
+├── core/
+│   └── config.py             # Configuracion
+├── services/
+│   ├── data_service.py       # Acceso a datos
+│   ├── feature_engineering.py # Calculo de features
+│   └── model_service.py      # Modelo ML
+├── models/
+│   └── risk_prediction_model.pkl # Modelo guardado
+└── requirements.txt
+
+6.2. FEATURE ENGINEERING
+
+El servicio calcula 4 features clave para cada estudiante-curso:
+
+FEATURE 1: submission_delay_rate (0-1)
+  Descripcion: Proporcion de entregas que fueron tardias
+  Calculo:
+    - Para cada entrega, calcular dias de retraso
+    - Retraso = submitted_at - due_date
+    - Si retraso > 0, es tardia
+    - delay_rate = entregas_tardias / total_entregas
+  Rango: 0 (todas a tiempo) a 1 (todas tardias)
+
+FEATURE 2: non_submission_rate (0-1)
+  Descripcion: Proporcion de tareas no entregadas
+  Calculo:
+    - total_tasks = numero de tareas del curso
+    - submitted_tasks = numero de tareas entregadas
+    - non_submission_rate = 1 - (submitted_tasks / total_tasks)
+  Rango: 0 (todas entregadas) a 1 (ninguna entregada)
+
+FEATURE 3: average_grade (0-1 normalizado)
+  Descripcion: Promedio de notas normalizado
+  Calculo:
+    - Calcular promedio de todas las notas del estudiante
+    - Normalizar de escala 1-7 a 0-1:
+      average_grade = (promedio - 1.0) / 6.0
+  Rango: 0 (promedio 1.0) a 1 (promedio 7.0)
+
+FEATURE 4: grade_variability (0-1 normalizado)
+  Descripcion: Variabilidad de notas (desviacion estandar)
+  Calculo:
+    - Calcular desviacion estandar de las notas
+    - Normalizar dividiendo por 3.0 (maximo esperado)
+    - Limitar a 1.0 maximo
+    - grade_variability = min(std / 3.0, 1.0)
+  Rango: 0 (notas muy consistentes) a 1 (notas muy variables)
+
+6.3. MODELO DE PREDICCION
+
+ALGORITMO: RandomForestClassifier
+
+Parametros:
+- n_estimators: 100 (numero de arboles)
+- max_depth: 10 (profundidad maxima)
+- random_state: 42 (reproducibilidad)
+- class_weight: 'balanced' (balancear clases)
+
+VARIABLE OBJETIVO (Target):
+  Riesgo alto (1) si:
+    - Promedio de notas < 4.0 (en escala 1-7), O
+    - Tasa de no entrega > 0.5
+  Riesgo bajo (0): Caso contrario
+
+ENTRENAMIENTO:
+  1. Obtener datos historicos de la base de datos
+  2. Calcular features para cada estudiante-curso
+  3. Calcular variable objetivo
+  4. Dividir en train/test (80/20)
+  5. Entrenar RandomForest
+  6. Evaluar con metricas (accuracy, precision, recall, F1)
+  7. Guardar modelo en archivo .pkl
+
+PREDICCION:
+  1. Obtener datos del estudiante en el curso
+  2. Calcular features
+  3. Cargar modelo entrenado
+  4. Hacer prediccion con probabilidades
+  5. Retornar: risk_level, risk_score, features, confidence
+
+6.4. ENDPOINTS DEL ML SERVICE
+
+BASE URL: http://localhost:8001
+
+HEALTH CHECK:
+- GET /health
+  Descripcion: Verificar que el servicio esta activo
+  Respuesta: { "message": "PAI ML Service is running" }
+
+ENTRENAR MODELO:
+- POST /train
+  Descripcion: Entrenar modelo con datos historicos
+  Respuesta:
+    {
+      "status": "success",
+      "accuracy": 0.95,
+      "precision": 0.94,
+      "recall": 0.95,
+      "f1_score": 0.94,
+      "samples_trained": 245,
+      "message": "Modelo entrenado exitosamente"
+    }
+
+PREDICCION INDIVIDUAL:
+- POST /predict
+  Body: { "student_id": 1, "course_id": 1 }
+  Respuesta:
+    {
+      "student_id": 1,
+      "course_id": 1,
+      "risk_level": "alto",
+      "risk_score": 0.75,
+      "features": {
+        "submission_delay_rate": 0.4,
+        "non_submission_rate": 0.3,
+        "average_grade": 0.5,
+        "grade_variability": 0.2
+      },
+      "confidence": 0.65
+    }
+
+PREDICCION BATCH:
+- GET /predict/batch?course_id=1
+  Descripcion: Predicciones para todos los estudiantes de un curso
+  Respuesta: Lista de predicciones (array de objetos como arriba)
+
+================================================================================
+                        7. ROLES Y PERMISOS
+================================================================================
+
+7.1. ROLES DEL SISTEMA
+
+1. ESTUDIANTE
+   - Ver cursos disponibles
+   - Inscribirse en cursos
+   - Ver cursos inscritos
+   - Ver tareas de cursos inscritos
+   - Entregar tareas
+   - Ver calificaciones
+   - Ver comunicados
+   - Comentar en comunicados
+
+2. DOCENTE
+   - Todo lo de ESTUDIANTE +
+   - Crear cursos
+   - Editar/eliminar sus cursos
+   - Crear tareas en sus cursos
+   - Editar/eliminar tareas
+   - Ver entregas de estudiantes
+   - Calificar entregas
+   - Ver estudiantes inscritos
+   - Crear comunicados
+   - Editar/eliminar sus comunicados
+   - Ver predicciones de riesgo (de sus cursos)
+
+3. ADMINISTRADOR
+   - Todo lo de DOCENTE +
+   - Ver todos los cursos de la plataforma
+   - Ver predicciones de riesgo de cualquier curso
+   - Entrenar modelo ML
+   - Crear cursos de prueba
+   - Asignar estudiantes a cursos
+
+7.2. PERMISOS POR ROL
+
+ESTUDIANTE:
+  GET /courses/available          ✅
+  POST /enrollments/enroll/{id}   ✅
+  GET /enrollments/my-courses     ✅
+  POST /submissions/              ✅
+  GET /submissions/my-submissions ✅
+  GET /announcements/course/{id}  ✅
+  POST /announcements/{id}/comments ✅
+
+DOCENTE:
+  POST /courses/                  ✅
+  PUT /courses/{id}               ✅ (solo owner)
+  DELETE /courses/{id}            ✅ (solo owner)
+  POST /tasks/                    ✅
+  PUT /tasks/{id}                 ✅ (solo owner del curso)
+  GET /submissions/task/{id}      ✅
+  PUT /submissions/{id}/grade     ✅
+  POST /announcements/            ✅
+  PUT /announcements/{id}         ✅ (solo author)
+  GET /ml/course/{id}             ✅ (solo cursos propios)
+
+ADMINISTRADOR:
+  GET /courses/                   ✅ (todos)
+  GET /ml/course/{id}             ✅ (cualquier curso)
+  POST /ml/train                  ✅
+  POST /enrollments/admin-enroll  ✅
+
+7.3. FLUJOS DE TRABAJO POR ROL
+
+FLUJO ESTUDIANTE:
+1. Iniciar sesion
+2. Ver dashboard con cursos inscritos
+3. Ver cursos disponibles
+4. Inscribirse en un curso
+5. Ver tareas del curso
+6. Entregar una tarea
+7. Ver calificacion recibida
+8. Ver comunicados y comentar
+
+FLUJO DOCENTE:
+1. Iniciar sesion
+2. Ver dashboard con mis cursos
+3. Crear un nuevo curso
+4. Crear tareas para el curso
+5. Ver entregas de estudiantes
+6. Calificar entregas
+7. Crear comunicados
+8. Ver predicciones de riesgo
+
+FLUJO ADMINISTRADOR:
+1. Iniciar sesion
+2. Ver dashboard con todos los cursos
+3. Entrenar modelo ML
+4. Ver predicciones de riesgo por curso
+5. Crear curso de prueba
+6. Asignar estudiantes
+
+================================================================================
+                   8. FUNCIONALIDADES DETALLADAS
+================================================================================
+
+8.1. GESTION DE CURSOS
+
+CREAR CURSO:
+  - Docente completa formulario: titulo, descripcion
+  - Backend crea curso con owner_id = docente actual
+  - Curso aparece en dashboard del docente
+
+VER CURSOS:
+  - Estudiantes: Ven cursos disponibles (no inscritos) y cursos inscritos
+  - Docentes: Ven sus propios cursos
+  - Administradores: Ven todos los cursos
+
+EDITAR CURSO:
+  - Solo el owner (docente creador) puede editar
+  - Puede cambiar titulo y descripcion
+  - No se pueden editar relaciones (tareas, inscripciones)
+
+ELIMINAR CURSO:
+  - Solo el owner puede eliminar
+  - CASCADE: Se eliminan todas las tareas relacionadas
+  - CASCADE: Se eliminan inscripciones
+  - CASCADE: Se eliminan comunicados
+
+8.2. GESTION DE TAREAS
+
+CREAR TAREA:
+  - Docente selecciona curso
+  - Completa: titulo, descripcion, fecha limite
+  - Tarea se asocia al curso
+  - Todos los estudiantes inscritos pueden verla
+
+VER TAREAS:
+  - En CourseDetail se muestran todas las tareas
+  - Para estudiantes: Botones "Ver / Entregar"
+  - Para docentes: Informacion y opciones de edicion
+
+EDITAR/ELIMINAR TAREA:
+  - Solo el docente owner del curso puede hacerlo
+  - Si se elimina, las entregas asociadas permanecen pero sin tarea
+
+8.3. SISTEMA DE ENTREGAS
+
+ENTREGAR TAREA (Estudiante):
+  1. Estudiante ve tarea en CourseDetail
+  2. Hace clic en "Entregar"
+  3. Completa formulario: contenido, archivo (opcional)
+  4. Backend crea Submission con submitted_at = ahora
+  5. Estado: Pendiente de calificacion
+
+VER ENTREGAS (Docente):
+  1. Docente ve lista de tareas
+  2. Selecciona tarea
+  3. Ve lista de entregas (SubmissionsList)
+  4. Cada entrega muestra: estudiante, contenido, fecha, estado
+
+CALIFICAR ENTREGA:
+  1. Docente ve entrega pendiente
+  2. Completa: nota (1.0-7.0), feedback (opcional)
+  3. Backend actualiza Submission con grade y feedback
+  4. Estado: Calificado
+  5. Estudiante puede ver su calificacion
+
+8.4. SISTEMA DE CALIFICACIONES
+
+ESCALA: 1.0 a 7.0
+
+CALCULO DE PROMEDIO:
+  - Promedio = suma de notas / numero de notas
+  - Solo cuenta notas de entregas calificadas
+  - Si no hay entregas calificadas, promedio = 0 o null
+
+VISUALIZACION:
+  - Estudiantes ven sus propias calificaciones
+  - Docentes ven todas las calificaciones de sus cursos
+  - Se muestra en tabla junto con feedback
+
+USO EN ML:
+  - El promedio se usa como feature para prediccion de riesgo
+  - Promedio < 4.0 indica riesgo alto
+
+8.5. FORO/COMUNICADOS
+
+CREAR COMUNICADO (Docente):
+  1. Docente va a CourseDetail
+  2. Seccion "Foro" al final
+  3. Completa: titulo, contenido
+  4. Comunicado aparece para todos los estudiantes del curso
+
+VER COMUNICADOS:
+  - Todos los usuarios del curso pueden ver comunicados
+  - Ordenados por fecha (mas reciente primero)
+  - Muestran: titulo, contenido, autor, fecha
+
+EDITAR/ELIMINAR COMUNICADO:
+  - Solo el autor (docente) puede editar/eliminar
+  - Al editar, updated_at se actualiza
+
+COMENTAR:
+  1. Cualquier usuario del curso puede comentar
+  2. Escribe comentario y envía
+  3. Comentario aparece debajo del comunicado
+  4. Muestra: autor, contenido, fecha
+
+ELIMINAR COMENTARIO:
+  - El autor del comentario puede eliminarlo
+  - El docente del curso tambien puede eliminarlo
+
+8.6. PREDICCIONES ML
+
+PREDICCION INDIVIDUAL:
+  - Endpoint: GET /ml/student/{id}/course/{id}
+  - Calcula features del estudiante en el curso
+  - Hace prediccion con modelo entrenado
+  - Retorna: nivel de riesgo, score, features, confianza
+
+PREDICCION POR CURSO:
+  - Endpoint: GET /ml/course/{id}
+  - Para todos los estudiantes del curso
+  - Retorna lista de predicciones
+  - Se muestra en AdminDashboard como tabla
+
+ENTRENAR MODELO:
+  - Endpoint: POST /ml/train
+  - Solo administradores
+  - Obtiene datos historicos
+  - Entrena modelo RandomForest
+  - Guarda modelo en .pkl
+  - Retorna metricas de entrenamiento
+
+VISUALIZACION:
+  - Tabla con: estudiante, nivel de riesgo, score, confianza
+  - Colores: Verde (bajo riesgo), Rojo (alto riesgo)
+  - Features desplegables para ver detalles
+
+================================================================================
+                            9. SEGURIDAD
+================================================================================
+
+9.1. AUTENTICACION JWT
+
+TOKEN JWT:
+  - Algoritmo: HS256
+  - Contenido: user_id, email, role, exp (expiracion)
+  - Expiracion: 30 minutos (configurable)
+  - Secret key: Generada en config
+
+VALIDACION:
+  - Cada request protegido valida el token
+  - Si el token expiro, retorna 401
+  - Si el token es invalido, retorna 401
+  - Frontend redirige a login si recibe 401
+
+SEGURIDAD:
+  - Password se hashea con bcrypt antes de guardar
+  - Token solo se envia en headers (no en URL)
+  - HTTPS en produccion
+
+9.2. AUTORIZACION
+
+VERIFICACION DE ROLES:
+  - Cada endpoint verifica el rol requerido
+  - get_current_user: Obtiene usuario del token
+  - Verificaciones adicionales: owner, active, etc.
+
+PERMISOS ESPECIFICOS:
+  - Owner checks: Solo el creador puede editar/eliminar
+  - Active checks: Solo usuarios activos pueden usar el sistema
+  - Role checks: Funcionalidades por rol
+
+9.3. CORS
+
+Configuracion:
+  - Origenes permitidos: Configurados en settings
+  - Credenciales: Permitidas
+  - Metodos: Todos (*)
+  - Headers: Todos (*)
+
+Desarrollo:
+  - Frontend: http://localhost:5173
+  - Backend: http://localhost:8000
+
+Produccion:
+  - Configurar dominios permitidos
+  - HTTPS requerido
+
+9.4. VALIDACION DE DATOS
+
+PYDANTIC SCHEMAS:
+  - Todos los datos se validan con Pydantic
+  - Tipos de datos estrictos
+  - Validaciones personalizadas
+  - Mensajes de error claros
+
+VALIDACIONES:
+  - Email: Formato valido
+  - Password: Minimo longitud
+  - Notas: Rango 1.0-7.0
+  - Fechas: Formato datetime
+  - IDs: Enteros positivos
+
+================================================================================
+                     10. DESPLIEGUE Y CONFIGURACION
+================================================================================
+
+10.1. REQUISITOS DEL SISTEMA
+
+DESARROLLO LOCAL:
+  - Python 3.11+
+  - Node.js 18+
+  - PostgreSQL 15
+  - Git
+
+PRODUCCION:
+  - Servidor Linux (Ubuntu 20.04+)
+  - Docker y Docker Compose
+  - 2GB+ RAM
+  - 20GB+ disco
+
+10.2. INSTALACION LOCAL
+
+1. Clonar repositorio
+2. Configurar base de datos PostgreSQL
+3. Configurar variables de entorno
+4. Instalar dependencias backend (pip install -r requirements.txt)
+5. Instalar dependencias frontend (npm install)
+6. Ejecutar backend (uvicorn app.main:app --reload)
+7. Ejecutar frontend (npm run dev)
+8. Ejecutar ML service (python main.py)
+
+10.3. DESPLIEGUE EN PRODUCCION
+
+Con Docker Compose:
+  1. Clonar repositorio en servidor
+  2. Configurar archivo .env
+  3. Ejecutar: docker-compose -f docker-compose.prod.yml up -d
+  4. Inicializar base de datos
+  5. Crear usuario administrador
+
+Servicios desplegados:
+  - Backend: Puerto 8000
+  - ML Service: Puerto 8001
+  - Frontend: Puerto 5173
+  - PostgreSQL: Puerto interno
+
+10.4. VARIABLES DE ENTORNO
+
+BACKEND (.env o config.py):
+  - DATABASE_URL: Conexion PostgreSQL
+  - SECRET_KEY: Clave secreta JWT
+  - BACKEND_CORS_ORIGINS: Origenes permitidos
+  - ACCESS_TOKEN_EXPIRE_MINUTES: Expiracion token
+
+ML SERVICE:
+  - DATABASE_URL: Conexion PostgreSQL
+  - MODEL_PATH: Ruta del modelo
+  - CORS_ORIGINS: Origenes permitidos
+
+================================================================================
+                  11. FLUJOS DE TRABAJO COMPLETOS
+================================================================================
+
+11.1. FLUJO: DOCENTE CREA CURSO
+
+1. Docente inicia sesion
+2. Ve TeacherDashboard
+3. Hace clic en "Crear Curso"
+4. Completa formulario: titulo, descripcion
+5. Submit
+6. Frontend: POST /courses/ con datos
+7. Backend: Valida token, crea curso con owner_id
+8. Backend: Retorna curso creado
+9. Frontend: Actualiza lista de cursos
+10. Docente ve nuevo curso en su dashboard
+
+11.2. FLUJO: ESTUDIANTE SE INSCRIBE
+
+1. Estudiante inicia sesion
+2. Ve StudentDashboard con "Cursos Disponibles"
+3. Ve lista de cursos no inscritos
+4. Hace clic en "Inscribirse" en un curso
+5. Frontend: POST /enrollments/enroll/{course_id}
+6. Backend: Valida token, verifica que no este inscrito
+7. Backend: Crea Enrollment con enrollment_date = ahora
+8. Backend: Retorna confirmacion
+9. Frontend: Actualiza lista (curso se mueve a "Mis Cursos")
+10. Estudiante puede ver el curso en "Mis Cursos Inscritos"
+
+11.3. FLUJO: DOCENTE CREA TAREA
+
+1. Docente va a CourseDetail de su curso
+2. Hace clic en "Crear Tarea"
+3. Completa formulario: titulo, descripcion, fecha limite
+4. Submit
+5. Frontend: POST /tasks/ con datos
+6. Backend: Valida token, verifica que es owner del curso
+7. Backend: Crea Task con course_id y created_at
+8. Backend: Retorna tarea creada
+9. Frontend: Actualiza lista de tareas
+10. Todos los estudiantes inscritos pueden ver la tarea
+
+11.4. FLUJO: ESTUDIANTE ENTREGA TAREA
+
+1. Estudiante va a CourseDetail
+2. Ve lista de tareas
+3. Hace clic en "Entregar" en una tarea
+4. Completa formulario: contenido, archivo (opcional)
+5. Submit
+6. Frontend: POST /submissions/ con task_id, content, file
+7. Backend: Valida token, verifica que esta inscrito
+8. Backend: Guarda archivo en uploads/ si hay
+9. Backend: Crea Submission con submitted_at = ahora
+10. Backend: Retorna entrega creada
+11. Frontend: Actualiza vista (boton cambia a "Ver Entrega")
+12. Docente puede ver la entrega en SubmissionsList
+
+11.5. FLUJO: DOCENTE CALIFICA
+
+1. Docente va a CourseDetail
+2. Selecciona una tarea
+3. Ve SubmissionsList con todas las entregas
+4. Para una entrega pendiente, completa: nota, feedback
+5. Submit
+6. Frontend: PUT /submissions/{id}/grade con grade, feedback
+7. Backend: Valida token, verifica que es docente del curso
+8. Backend: Actualiza Submission con grade y feedback
+9. Backend: Retorna entrega actualizada
+10. Frontend: Actualiza vista (muestra nota y feedback)
+11. Estudiante puede ver su calificacion
+
+11.6. FLUJO: PREDICCION DE RIESGO
+
+1. Administrador inicia sesion
+2. Ve AdminDashboard con todos los cursos
+3. Hace clic en "Ver Predicciones de Riesgo" en un curso
+4. Frontend: GET /ml/course/{course_id}
+5. Backend: Valida token, verifica que es admin
+6. Backend: Llama a ML Service: GET /predict/batch?course_id={id}
+7. ML Service:
+   a. Obtiene datos del curso de la BD
+   b. Calcula features para cada estudiante
+   c. Carga modelo entrenado
+   d. Hace prediccion para cada estudiante
+   e. Retorna lista de predicciones
+8. Backend: Retorna predicciones al frontend
+9. Frontend: Muestra tabla con predicciones
+10. Administrador ve: estudiante, riesgo, score, confianza, features
+
+================================================================================
+             12. DETALLES TECNICOS AVANZADOS
+================================================================================
+
+12.1. FEATURE ENGINEERING DETALLADO
+
+CALCULO DE FEATURES:
+
+1. submission_delay_rate:
+   - Obtener todas las entregas del estudiante en el curso
+   - Para cada entrega con submitted_at y due_date:
+     * Calcular: delay_days = (submitted_at - due_date).days
+     * Si delay_days > 0: es tardia
+   - delay_rate = count(tardias) / count(total_entregas)
+   - Si no hay entregas: delay_rate = 1.0 (maximo riesgo)
+
+2. non_submission_rate:
+   - Obtener todas las tareas del curso
+   - Contar tareas entregadas por el estudiante
+   - non_submission_rate = 1 - (entregadas / total)
+   - Limitar entre 0 y 1
+
+3. average_grade:
+   - Obtener todas las notas del estudiante en el curso
+   - Calcular promedio: mean(grades)
+   - Normalizar: (promedio - 1.0) / 6.0
+   - Si no hay notas: 0.0
+
+4. grade_variability:
+   - Obtener todas las notas
+   - Calcular desviacion estandar: std(grades)
+   - Normalizar: min(std / 3.0, 1.0)
+   - Si hay menos de 2 notas: 0.0
+
+12.2. ALGORITMO DE ML
+
+RANDOM FOREST CLASSIFIER:
+
+Ventajas:
+  - Maneja bien datos no lineales
+  - No requiere normalizacion extensa
+  - Proporciona importancia de features
+  - Menos propenso a overfitting que arboles individuales
+
+Funcionamiento:
+  1. Crea 100 arboles de decision
+  2. Cada arbol usa subconjunto aleatorio de datos
+  3. Cada split usa subconjunto aleatorio de features
+  4. Prediccion final: voto mayoritario de todos los arboles
+  5. Probabilidades: promedio de probabilidades de cada arbol
+
+Parametros ajustados:
+  - n_estimators=100: Balance entre precision y velocidad
+  - max_depth=10: Evita overfitting
+  - class_weight='balanced': Maneja desbalance de clases
+  - random_state=42: Reproducibilidad
+
+12.3. OPTIMIZACIONES
+
+BACKEND:
+  - Uso de indices en BD para queries frecuentes
+  - Caché de modelos cargados en ML Service
+  - Validacion temprana de datos
+  - Queries optimizadas con SQLAlchemy
+
+FRONTEND:
+  - Lazy loading de componentes
+  - Caché de datos en estado global
+  - Debounce en busquedas
+  - Optimizacion de re-renders con React
+
+BASE DE DATOS:
+  - Indices en foreign keys
+  - Constraints para integridad
+  - Cascade deletes para limpieza automatica
+
+12.4. MANEJO DE ERRORES
+
+BACKEND:
+  - HTTPException de FastAPI para errores HTTP
+  - Try-except en operaciones criticas
+  - Logging de errores
+  - Mensajes de error claros al frontend
+
+FRONTEND:
+  - Try-catch en llamadas API
+  - Mensajes de error al usuario
+  - Manejo de estados de carga
+  - Validacion de formularios
+
+ML SERVICE:
+  - Verificacion de modelo cargado
+  - Manejo de datos faltantes
+  - Fallback si el servicio no esta disponible
+  - Logging de predicciones
+
+================================================================================
+                            CONCLUSION
+================================================================================
+
+La Plataforma Academica Inteligente (PAI) es un sistema completo que integra:
+
+- Gestion academica tradicional (cursos, tareas, calificaciones)
+- Comunicacion entre usuarios (foro/comunicados)
+- Machine Learning para prediccion de riesgo academico
+
+La arquitectura de microservicios permite escalabilidad y mantenimiento
+independiente de cada componente.
+
+El sistema esta diseñado para ser:
+- Intuitivo y facil de usar
+- Seguro y robusto
+- Escalable y mantenible
+- Extensible para futuras funcionalidades
+
+================================================================================
+FIN DE LA DOCUMENTACION
+================================================================================
+

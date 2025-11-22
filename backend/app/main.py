@@ -6,7 +6,7 @@ from typing import List
 from pathlib import Path
 
 # Importa los routers de la API
-from app.api.endpoints import users, courses, tasks, enrollments, submissions, announcements, ml_predictions
+from app.api.endpoints import users, courses, tasks, enrollments, submissions, announcements, ml_predictions, student_profiles
 from app.api.endpoints.login import router as login_router
 
 from app.core.config import settings # <-- Importa la configuración
@@ -54,6 +54,7 @@ app.include_router(enrollments.router, prefix="/enrollments", tags=["enrollments
 app.include_router(submissions.router, prefix="/submissions", tags=["submissions"])
 app.include_router(announcements.router, prefix="/announcements", tags=["announcements"])
 app.include_router(ml_predictions.router, prefix="/ml", tags=["ML Predictions"])
+app.include_router(student_profiles.router, prefix=f"{settings.API_V1_STR}/student-profiles", tags=["Student Profiles"])
 
 @app.get("/", tags=["Root"])
 def read_root():

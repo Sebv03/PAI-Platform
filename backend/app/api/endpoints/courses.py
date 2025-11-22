@@ -147,6 +147,9 @@ async def read_available_courses(
     Obtiene la lista de cursos disponibles (no inscritos) para el estudiante autenticado.
     Solo estudiantes pueden acceder a este endpoint.
     """
+    from app.crud import crud_user
+    from datetime import datetime
+    
     if current_user.role != UserRole.ESTUDIANTE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

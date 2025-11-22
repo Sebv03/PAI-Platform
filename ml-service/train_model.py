@@ -35,7 +35,7 @@ def main():
             print("Por favor, ejecuta primero el script populate_historical_data.py")
             return
         
-        print(f"   ✓ Datos obtenidos: {len(historical_data)} registros")
+        print(f"   [OK] Datos obtenidos: {len(historical_data)} registros")
         print()
         
         # 2. Calcular features
@@ -47,8 +47,8 @@ def main():
             print("Verifica que haya entregas con calificaciones en la base de datos.")
             return
         
-        print(f"   ✓ Features calculadas: {len(features_df)} estudiantes-cursos")
-        print(f"   ✓ Features: {', '.join(feature_engineering.get_feature_names())}")
+        print(f"   [OK] Features calculadas: {len(features_df)} estudiantes-cursos")
+        print(f"   [OK] Features: {', '.join(feature_engineering.get_feature_names())}")
         print()
         
         # Mostrar estadísticas de las features

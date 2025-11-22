@@ -7,4 +7,5 @@ from .task import Task
 from .submission import Submission
 from .announcement import Announcement
 from .comment import Comment
+from .student_profile import StudentProfile
 # Agrega aquí cualquier otro modelo nuevo que crees.
