@@ -1,0 +1,470 @@
+[Párrafo 1]
+Proyecto 
+
+[Párrafo 2]
+PRELIMINARES
+
+[Párrafo 3]
+Resumen Ejecutivo (máx. 300 palabras – síntesis completa del proyecto)
+
+[Párrafo 4]
+Un resumen ejecutivo de un proyecto de software es un documento breve y conciso que resume los aspectos clave del proyecto para que el lector comprenda rápidamente su propósito, objetivos y valor del proyecto sin leer el documento completo.
+
+[Párrafo 5]
+(Revisar lineamientos en el Ambiente de Aprendizaje AAI)
+
+[Párrafo 6]
+Agradecimientos (opcional)
+
+[Párrafo 7]
+Índice de Figuras y Tablas
+
+[Párrafo 8]
+Glosario de Términos y Acrónimos
+
+[Párrafo 9]
+Lista de Abreviaturas
+
+[Párrafo 10]
+INTRODUCCIÓN
+
+[Párrafo 11]
+IDENTIFICACIÓN Y JUSTIFICACIÓN DEL PROBLEMA
+
+[Párrafo 12]
+Descripción de la organización
+
+[Párrafo 13]
+Antecedentes de la Organización.
+
+[Párrafo 14]
+Diagnóstico de la situación actual 
+
+[Párrafo 15]
+Descripción del problema 
+
+[Párrafo 16]
+Actualización del problema 
+
+[Párrafo 17]
+(estado actual vs. diagnóstico inicial) 
+
+[Párrafo 18]
+Justificación del problema 
+
+[Párrafo 19]
+Relevancia del problema 
+
+[Párrafo 20]
+(organizacional, sectorial, social) 
+
+[Párrafo 21]
+Complejidad del problema 
+
+[Párrafo 22]
+(técnica, operativa, escala)
+
+[Párrafo 23]
+ESTADO DEL ARTE Y MARCO TEÓRICO
+
+[Párrafo 24]
+Revisión sistemática de literatura 
+
+[Párrafo 25]
+Realicen un proceso de búsqueda, análisis y selección de fuentes bibliográficas específica para el proyecto, que sustenten la propuesta de solución (mín. 15 fuentes académicas, 5 años) 
+
+[Párrafo 26]
+Marco teórico conceptual
+
+[Párrafo 27]
+Elaboren el marco teórico del proyecto para sustentar la solución TI propuesta para la empresa involucrada o emprendimiento
+
+[Párrafo 28]
+Tecnologías y soluciones existentes 
+
+[Párrafo 29]
+(comparativa estructurada)
+
+[Párrafo 30]
+OBJETIVOS DEL PROYECTO
+
+[Párrafo 31]
+Objetivo General
+
+[Párrafo 32]
+Formule un objetivo general que dé cuenta del logro más relevante a obtener. Debe ser coherente con el planteamiento del problema y con los resultados comprometidos
+
+[Párrafo 33]
+Objetivos Específicos 
+
+[Párrafo 34]
+Deben plantear al menos cinco objetivos específicos (medibles, alineados con SMART), considerando la asociación con productos y servicios TI que el proyecto desarrollará o implementará, en total coherencia con el objetivo general. Corresponden al desglose detallado, en metas parciales que contribuyen al logro del objetivo general, siguiendo una secuencia lógica que indique los pasos o etapas que se deben cumplir para lograrlo
+
+[Párrafo 35]
+LEVANTAMIENTO DE REQUERIMIENTOS
+
+[Párrafo 36]
+Técnicas utilizadas 
+
+[Párrafo 37]
+Con el propósito de documentar las necesidades del cliente para el desarrollo de la solución informática, determinen qué artefactos serán considerados, tales como la entrevista, la observación, el estudio, la encuesta, grupos de discusión, lluvia de ideas, entre otros.
+
+[Párrafo 38]
+Requerimientos funcionales 
+
+[Párrafo 39]
+Documenten los requerimientos, ya sea siguiendo el estándar IEEE830 (métodos predictivos) o historias de usuario (métodos adaptativos).
+
+[Párrafo 40]
+Requerimientos no funcionales 
+
+[Párrafo 41]
+Definen cómo debe funcionar el sistema, enfocándose en aspectos como la velocidad, seguridad, usabilidad, fiabilidad y portabilidad. 
+
+[Párrafo 42]
+Matriz de Trazabilidad de Requerimientos 
+
+[Párrafo 43]
+Matriz de Trazabilidad de Requisitos (RTM, por sus siglas en inglés) es una tabla que vincula los requisitos de un proyecto con sus objetivos y las pruebas que verifican su cumplimiento (Req ↔ Objetivos ↔ Pruebas). 
+
+[Párrafo 44]
+SOLUCIÓN TECNOLÓGICA PROPUESTA
+
+[Párrafo 45]
+Formulación de la solución 
+
+[Párrafo 46]
+Alcance y restricciones 
+
+[Párrafo 47]
+Impacto esperado 
+
+[Párrafo 48]
+(organizacional, usuarios, indicadores) 
+
+[Párrafo 49]
+Procesos de negocio afectados 
+
+[Párrafo 50]
+(AS-IS vs. TO-BE) 
+
+[Párrafo 51]
+Registro de interesados 
+
+[Párrafo 52]
+(matriz RACI) 
+
+[Párrafo 53]
+Indicadores de gestión 
+
+[Párrafo 54]
+(KPI) 
+
+[Párrafo 55]
+Niveles de servicio 
+
+[Párrafo 56]
+(SLA)
+
+[Párrafo 57]
+METODOLOGÍA DE TRABAJO
+
+[Párrafo 58]
+Metodología de desarrollo 
+
+[Párrafo 59]
+(Ágil, Scrum, DevOps, Cascada – justificada) 
+
+[Párrafo 60]
+Duración y cronograma
+
+[Párrafo 61]
+ (Carta Gantt + hitos clave) 
+
+[Párrafo 62]
+Equipo de trabajo 
+
+[Párrafo 63]
+(roles, responsabilidades, carga horaria) 
+
+[Párrafo 64]
+Plan de recursos 
+
+[Párrafo 65]
+(hardware, software, licencias, presupuesto) 
+
+[Párrafo 66]
+Gestión de Riesgos 
+
+[Párrafo 67]
+(matriz de riesgos: probabilidad × impacto) 
+
+[Párrafo 68]
+Gestión del Cronograma 
+
+[Párrafo 69]
+(actualizaciones, desviaciones, correctivos)
+
+[Párrafo 70]
+ARQUITECTURA TECNOLÓGICA
+
+[Párrafo 71]
+Reconocimiento de arquitectura empresarial 
+
+[Párrafo 72]
+(TOGAF/TOGAF ADM si aplica) 
+
+[Párrafo 73]
+Análisis cualitativo y cuantitativo de tecnologías 
+
+[Párrafo 74]
+Tecnologías, herramientas, lenguajes y componentes seleccionados 
+
+[Párrafo 75]
+Diagramas de Arquitectura   
+
+[Párrafo 76]
+Diagrama BPMN 
+
+[Párrafo 77]
+Confeccionen y describan los BPMN de los procesos de negocio, considerando al menos tres procesos principales del negocio con sus respectivos subprocesos.  
+
+[Párrafo 78]
+Diagrama de Casos de Uso 
+
+[Párrafo 79]
+Muestra las interacciones del sistema con los actores externos mediante representaciones de flujos de trabajo o procesos. 
+
+[Párrafo 80]
+El "caso de uso cero" (o UC0) se refiere típicamente al caso de uso base o inicial donde se describe un escenario fundamental para validar el sistema en su estado mínimo viable (por ejemplo, autenticación básica, inicialización o acceso inicial al sistema).
+
+[Párrafo 81]
+Los casos de uso deben diagramarse con su respectiva descripción, mostrando una relación coherente entre la solución y la problemática abordada.
+
+[Párrafo 82]
+Diagrama de Componentes
+
+[Párrafo 83]
+Deben mostrarse todos los componentes lógicos y físicos con sus respectivas relaciones de dependencias que conforman la solución entregada
+
+[Párrafo 84]
+Modelo de Datos 
+
+[Párrafo 85]
+Confeccionen el diagrama del modelo de datos. Para ello diagramen un modelo lógico, incluyendo como anexo el respectivo diccionario de datos. En el caso que la base de datos seleccionada es no relacional, detallar sus características.  
+
+[Párrafo 86]
+Topología de Comunicaciones
+
+[Párrafo 87]
+Confeccionen y describan el diagrama de la Topología de comunicación que da soporte a la solución. Para esto, detallen las características de transmisión y los protocolos de comunicaciones necesarios de implementar para el correcto funcionamiento de la solución.
+
+[Párrafo 88]
+ Diagrama de Infraestructura Física/Lógica
+
+[Párrafo 89]
+   Confeccionen el diagrama de diseño de la infraestructura que da soporte a la solución.
+
+[Párrafo 90]
+Diagrama de Arquitectura General 
+
+[Párrafo 91]
+Confeccionen y describan el diagrama de Arquitectura que da soporte a la solución, especificando los componentes de infraestructura TI, tanto de software como de hardware. (C4 Modelo recomendado)
+
+[Párrafo 92]
+IMPLEMENTACIÓN DE KPI Y SLA
+
+[Párrafo 93]
+Descripción detallada de KPI 
+
+[Párrafo 94]
+(fórmula, meta, fuente de datos) 
+
+[Párrafo 95]
+Descripción detallada de SLA 
+
+[Párrafo 96]
+(tiempo respuesta, disponibilidad, penalidades) 
+
+[Párrafo 97]
+Mecanismos de monitoreo 
+
+[Párrafo 98]
+(herramientas: Grafana, Zabbix, ELK, etc.)
+
+[Párrafo 99]
+PLAN DE PRUEBAS Y ASEGURAMIENTO DE CALIDAD
+
+[Párrafo 100]
+Estrategia de pruebas 
+
+[Párrafo 101]
+(unitarias, integración, sistema, aceptación – UAT) 
+
+[Párrafo 102]
+Casos de prueba 
+
+[Párrafo 103]
+(matriz: entrada, acción, resultado esperado) 
+
+[Párrafo 104]
+Normas y estándares aplicados 
+
+[Párrafo 105]
+(ISO 25010, OWASP, IEEE 829) 
+
+[Párrafo 106]
+Herramientas de pruebas 
+
+[Párrafo 107]
+(Selenium, JUnit, Postman, JMeter)
+
+[Párrafo 108]
+IMPLEMENTACIÓN Y RESULTADOS
+
+[Párrafo 109]
+Implement360 de la solución 
+
+[Párrafo 110]
+(capturas, código fuente destacado) 
+
+[Párrafo 111]
+Resultados obtenidos 
+
+[Párrafo 112]
+(métricas reales vs. esperadas) 
+
+[Párrafo 113]
+Validación con usuarios 
+
+[Párrafo 114]
+(encuestas, focus group, pruebas piloto) 
+
+[Párrafo 115]
+Comparación pre y post implementación 
+
+[Párrafo 116]
+(dashboards, gráficos) 
+
+[Párrafo 117]
+Repositorio oficial 
+
+[Párrafo 118]
+(GitHub/GitLab con DOI o enlace permanente)
+
+[Párrafo 119]
+ANÁLISIS DE FACTIBILIDAD
+
+[Párrafo 120]
+Factibilidad técnica 
+
+[Párrafo 121]
+Factibilidad operativa 
+
+[Párrafo 122]
+(implementación y adopción) 
+
+[Párrafo 123]
+Factibilidad económica 
+
+[Párrafo 124]
+(ROI, VAN, TIR, presupuesto ejecutado) 
+
+[Párrafo 125]
+Factibilidad legal y regulatoria 
+
+[Párrafo 126]
+(LGPD, GDPR, Ley 19.628) 
+
+[Párrafo 127]
+Factibilidad ética 
+
+[Párrafo 128]
+(sesgos en IA, privacidad, inclusión)
+
+[Párrafo 129]
+PLAN DE IMPLEMENTACIÓN Y MANTENIMIENTO
+
+[Párrafo 130]
+Plan de despliegue 
+
+[Párrafo 131]
+(CI/CD, entornos: dev/staging/prod) 
+
+[Párrafo 132]
+Gestión de disponibilidad 
+
+[Párrafo 133]
+(99.9%, redundancia, failover) 
+
+[Párrafo 134]
+Gestión de continuidad del negocio 
+
+[Párrafo 135]
+(backup, DRP) 
+
+[Párrafo 136]
+Plan de mantención 
+
+[Párrafo 137]
+(correctiva, evolutiva, preventiva) 
+
+[Párrafo 138]
+ÉTICA, SEGURIDAD Y CUMPLIMIENTO
+
+[Párrafo 139]
+Análisis de riesgos de seguridad 
+
+[Párrafo 140]
+(OWASP Top 10, pentest si aplica) 
+
+[Párrafo 141]
+Medidas de ciberseguridad implementadas 
+
+[Párrafo 142]
+Política de privacidad y tratamiento de datos 
+
+[Párrafo 143]
+Consideraciones éticas 
+
+[Párrafo 144]
+(IA, automatización de empleos, accesibilidad)
+
+[Párrafo 145]
+CONCLUSIONES
+
+[Párrafo 146]
+(Vinculación explícita: problema → solución → impacto → objetivos alcanzados)
+
+[Párrafo 147]
+REFERENCIAS BIBLIOGRÁFICAS
+
+[Párrafo 148]
+(Estilo IEEE o APA – mínimo 25 fuentes: 60% académicas, 40% técnicas/industriales)
+
+[Párrafo 149]
+ANEXOS
+
+[Párrafo 150]
+Código fuente completo 
+
+[Párrafo 151]
+(enlace a repositorio + extractos clave) 
+
+[Párrafo 152]
+Encuestas y resultados estadísticos 
+
+[Párrafo 153]
+Certificados de pruebas 
+
+[Párrafo 154]
+(UAT, performance) 
+
+[Párrafo 155]
+Carta Gantt final ejecutada 
+
+[Párrafo 156]
+Evidencia de despliegue en producción
+
+
+=== Total de párrafos: 156 ===

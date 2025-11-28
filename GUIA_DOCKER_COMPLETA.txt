@@ -1,0 +1,962 @@
+================================================================================
+GUÍA COMPLETA DE DOCKER PARA LA PLATAFORMA PAI
+================================================================================
+
+1. ¿QUÉ ES DOCKER?
+================================================================================
+
+Docker es una plataforma de contenedorización que permite empaquetar 
+aplicaciones y todas sus dependencias en "contenedores" que pueden ejecutarse 
+en cualquier entorno de forma consistente.
+
+1.1. CONCEPTO FUNDAMENTAL: CONTENEDORES
+----------------------------------------
+
+Imagina un contenedor como una "caja" que contiene:
+- Tu aplicación (código)
+- Todas las dependencias necesarias (librerías, frameworks)
+- El sistema operativo mínimo necesario para ejecutarla
+- Configuraciones específicas
+
+Un contenedor es similar a una máquina virtual, pero más ligera y rápida.
+
+1.2. ANALOGÍA SIMPLE
+---------------------
+
+Piensa en Docker como si fuera el sistema de envío de paquetes:
+- Sin Docker: Tu aplicación puede funcionar en tu computadora, pero cuando 
+  alguien más intenta ejecutarla en su computadora, puede fallar porque 
+  tiene diferentes versiones de Python, Node.js, librerías, etc.
+
+- Con Docker: Empaquetas tu aplicación en un "contenedor estándar" que 
+  funciona igual en cualquier lugar donde se ejecute Docker, sin importar 
+  el sistema operativo o la configuración del host.
+
+1.3. VENTAJAS PRINCIPALES
+--------------------------
+
+✅ CONSISTENCIA: Funciona igual en desarrollo, testing y producción
+✅ AISLAMIENTO: Cada aplicación está aislada, no interfiere con otras
+✅ PORTABILIDAD: Corre en Windows, Linux, Mac, servidores cloud, etc.
+✅ ESCALABILIDAD: Fácil de replicar y escalar servicios
+✅ FACILIDAD: Una vez configurado, es muy fácil de usar
+
+================================================================================
+2. ¿POR QUÉ USAR DOCKER EN ESTE PROYECTO?
+================================================================================
+
+La Plataforma PAI tiene múltiples componentes que necesitan trabajar juntos:
+
+2.1. COMPONENTES DE LA PLATAFORMA
+----------------------------------
+
+1. PostgreSQL (Base de datos)
+2. Backend FastAPI (API en Python)
+3. ML Service (Servicio de Machine Learning en Python)
+4. Frontend React (Aplicación web en JavaScript)
+
+2.2. PROBLEMAS SIN DOCKER
+--------------------------
+
+❌ Cada desarrollador necesita instalar:
+   - PostgreSQL
+   - Python 3.11 con todas las dependencias
+   - Node.js con todas las dependencias
+   - Configurar variables de entorno manualmente
+   - Asegurar que las versiones coincidan
+
+❌ En producción, se necesita:
+   - Configurar servidor desde cero
+   - Instalar todas las dependencias
+   - Manejar conflictos de versiones
+   - Configurar networking entre servicios
+   - Manejar actualizaciones de forma compleja
+
+2.3. SOLUCIÓN CON DOCKER
+-------------------------
+
+✅ Un solo comando levanta todos los servicios
+✅ Configuración consistente entre desarrollo y producción
+✅ Fácil de compartir con otros desarrolladores
+✅ Actualización simple (rebuild y restart)
+✅ Aislamiento entre servicios
+✅ Networking automático entre contenedores
+
+================================================================================
+3. CONCEPTOS CLAVE DE DOCKER
+================================================================================
+
+3.1. DOCKERFILE
+---------------
+
+Un Dockerfile es un archivo de texto que contiene instrucciones para construir 
+una "imagen" de Docker. Es como una receta que dice:
+- Qué sistema operativo base usar
+- Qué dependencias instalar
+- Qué código copiar
+- Qué comandos ejecutar
+
+Ejemplo simplificado:
+```dockerfile
+FROM python:3.11        # Imagen base con Python 3.11
+WORKDIR /app            # Directorio de trabajo
+COPY requirements.txt .  # Copiar archivo de dependencias
+RUN pip install -r requirements.txt  # Instalar dependencias
+COPY . .                # Copiar todo el código
+CMD ["python", "app.py"]  # Comando a ejecutar
+```
+
+3.2. IMAGEN (IMAGE)
+-------------------
+
+Una imagen es un "template" o "plantilla" creada desde un Dockerfile. Es 
+inmutable (no cambia). Puedes crear múltiples contenedores desde una imagen.
+
+Ejemplo: La imagen "python:3.11" contiene Python 3.11 y su sistema base.
+
+3.3. CONTENEDOR (CONTAINER)
+----------------------------
+
+Un contenedor es una "instancia en ejecución" de una imagen. Múltiples 
+contenedores pueden ejecutarse desde la misma imagen.
+
+Ejemplo: Puedes tener 3 contenedores ejecutándose desde la misma imagen 
+"python:3.11", cada uno ejecutando una aplicación diferente.
+
+3.4. DOCKER COMPOSE
+-------------------
+
+Docker Compose es una herramienta para definir y ejecutar múltiples contenedores 
+Docker. Usa un archivo YAML (docker-compose.yml) para configurar todos los 
+servicios de tu aplicación.
+
+Ventajas:
+- Define todos los servicios en un solo archivo
+- Configura networking automático entre contenedores
+- Maneja volúmenes y variables de entorno
+- Permite iniciar/detener todos los servicios con un comando
+
+3.5. VOLUMENES (VOLUMES)
+-------------------------
+
+Los volúmenes permiten persistir datos fuera del contenedor. Cuando un 
+contenedor se elimina, los datos en volúmenes se mantienen.
+
+Ejemplo: La base de datos PostgreSQL guarda sus datos en un volumen, así 
+si el contenedor se reinicia, los datos no se pierden.
+
+3.6. REDES (NETWORKS)
+---------------------
+
+Docker crea una red virtual donde los contenedores pueden comunicarse entre 
+sí usando sus nombres de servicio como direcciones.
+
+Ejemplo: El backend puede conectarse a la base de datos usando la URL:
+"postgresql://admin:admin@db:5432/pai_db" donde "db" es el nombre del 
+servicio de base de datos.
+
+================================================================================
+4. ARQUITECTURA DOCKER EN ESTE PROYECTO
+================================================================================
+
+4.1. ESTRUCTURA DE ARCHIVOS
+----------------------------
+
+El proyecto tiene los siguientes archivos Docker:
+
+📁 PAI-Platform/
+  ├── docker-compose.yml          # Configuración para DESARROLLO
+  ├── docker-compose.prod.yml     # Configuración para PRODUCCIÓN
+  ├── backend/
+  │   └── Dockerfile              # Construye imagen del backend
+  ├── frontend/
+  │   └── Dockerfile              # Construye imagen del frontend
+  └── ml-service/
+      └── Dockerfile              # Construye imagen del ML service
+
+4.2. SERVICIOS CONFIGURADOS
+----------------------------
+
+En docker-compose.yml tenemos 4 servicios:
+
+1. DB (PostgreSQL)
+   - Imagen: postgres:15-alpine
+   - Puerto: 5433 (host) → 5432 (contenedor)
+   - Volumen: postgres_data (persiste datos)
+   - Variables: usuario, contraseña, nombre de BD
+
+2. BACKEND (FastAPI)
+   - Construido desde: backend/Dockerfile
+   - Puerto: 8000
+   - Volumen: código fuente montado para desarrollo
+   - Depende de: db (espera a que la BD esté lista)
+
+3. ML-SERVICE (FastAPI para ML)
+   - Construido desde: ml-service/Dockerfile
+   - Puerto: 8001
+   - Volumen: modelos ML guardados
+   - Depende de: db
+
+4. FRONTEND (React + Vite)
+   - Construido desde: frontend/Dockerfile
+   - Puerto: 5173
+   - Volumen: código fuente montado para desarrollo
+   - Depende de: backend
+
+4.3. REDES Y COMUNICACIÓN
+--------------------------
+
+Todos los servicios están en la misma red Docker:
+- Pueden comunicarse usando nombres de servicio
+- Backend → DB: "postgresql://admin:admin@db:5432/pai_db"
+- Frontend → Backend: "http://backend:8000"
+- Backend → ML Service: "http://ml-service:8001"
+
+================================================================================
+5. INSTALACIÓN DE DOCKER
+================================================================================
+
+5.1. WINDOWS
+------------
+
+1. Descargar Docker Desktop:
+   - Ir a: https://www.docker.com/products/docker-desktop
+   - Descargar Docker Desktop para Windows
+   - Ejecutar el instalador
+
+2. Requisitos:
+   - Windows 10 64-bit: Pro, Enterprise, o Education
+   - WSL 2 habilitado (Windows Subsystem for Linux 2)
+   - Virtualización habilitada en BIOS
+
+3. Verificar instalación:
+   ```powershell
+   docker --version
+   docker-compose --version
+   ```
+
+5.2. MAC
+--------
+
+1. Descargar Docker Desktop:
+   - Ir a: https://www.docker.com/products/docker-desktop
+   - Descargar Docker Desktop para Mac
+   - Arrastrar a la carpeta Applications
+
+2. Requisitos:
+   - Mac con procesador Intel o Apple Silicon
+   - macOS 10.15 o superior
+
+3. Verificar instalación:
+   ```bash
+   docker --version
+   docker-compose --version
+   ```
+
+5.3. LINUX (Ubuntu/Debian)
+---------------------------
+
+1. Instalar Docker:
+   ```bash
+   # Actualizar sistema
+   sudo apt update
+   
+   # Instalar dependencias
+   sudo apt install -y ca-certificates curl gnupg lsb-release
+   
+   # Agregar clave GPG oficial de Docker
+   sudo mkdir -p /etc/apt/keyrings
+   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+     sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+   
+   # Agregar repositorio
+   echo \
+     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+     https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
+     sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+   
+   # Instalar Docker
+   sudo apt update
+   sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+   
+   # Agregar usuario al grupo docker (para no usar sudo)
+   sudo usermod -aG docker $USER
+   # Cerrar sesión y volver a entrar para aplicar cambios
+   ```
+
+2. Verificar instalación:
+   ```bash
+   docker --version
+   docker compose version
+   ```
+
+5.4. VERIFICAR QUE DOCKER FUNCIONA
+-----------------------------------
+
+Ejecutar un contenedor de prueba:
+
+```bash
+docker run hello-world
+```
+
+Si ves un mensaje de bienvenida, Docker está funcionando correctamente.
+
+================================================================================
+6. CONFIGURACIÓN DE DOCKER EN ESTE PROYECTO
+================================================================================
+
+6.1. DOCKERFILE DEL BACKEND
+----------------------------
+
+Ubicación: backend/Dockerfile
+
+```dockerfile
+FROM python:3.11-slim
+# Usa una imagen base con Python 3.11 ligera
+
+WORKDIR /app
+# Establece el directorio de trabajo dentro del contenedor
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    gcc \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+# Instala herramientas necesarias para compilar dependencias Python
+
+# Copiar requirements e instalar dependencias Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+# Instala todas las librerías Python necesarias
+
+# Copiar código de la aplicación
+COPY ./app /app/app
+# Copia el código de la aplicación
+
+# Crear directorio para uploads
+RUN mkdir -p uploads/submissions
+# Crea directorio para archivos subidos por usuarios
+
+EXPOSE 8000
+# Expone el puerto 8000 para el servidor FastAPI
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Comando que se ejecuta cuando el contenedor inicia
+```
+
+6.2. DOCKERFILE DEL ML SERVICE
+-------------------------------
+
+Ubicación: ml-service/Dockerfile
+
+Similar al backend, pero:
+- Expone puerto 8001
+- Crea directorio para modelos ML
+- Ejecuta el servicio ML en lugar del backend
+
+6.3. DOCKERFILE DEL FRONTEND
+-----------------------------
+
+Ubicación: frontend/Dockerfile
+
+```dockerfile
+FROM node:18-alpine
+# Usa imagen base con Node.js 18
+
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm install
+
+# Copiar código fuente
+COPY . .
+
+# Exponer puerto
+EXPOSE 5173
+
+# Comando para desarrollo (con hot reload)
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+```
+
+6.4. DOCKER COMPOSE (DESARROLLO)
+---------------------------------
+
+Ubicación: docker-compose.yml
+
+Este archivo configura todos los servicios para desarrollo:
+
+```yaml
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:15-alpine
+    # Usa imagen oficial de PostgreSQL versión 15
+    container_name: pai_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    # Persiste datos de la BD en un volumen
+    ports:
+      - "5433:5432"
+    # Mapea puerto 5433 del host → 5432 del contenedor
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=pai_db
+    restart: unless-stopped
+    # Reinicia automáticamente si se cae
+
+  # Backend API
+  backend:
+    build: ./backend
+    # Construye imagen desde backend/Dockerfile
+    container_name: pai_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/code
+    # Monta código local para desarrollo (cambios se reflejan en vivo)
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@db:5432/pai_db
+    # Conecta al servicio "db" usando su nombre
+    depends_on:
+      - db
+    # Espera a que la BD esté lista antes de iniciar
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  # Define volumen persistente para datos de PostgreSQL
+```
+
+6.5. DOCKER COMPOSE (PRODUCCIÓN)
+---------------------------------
+
+Ubicación: docker-compose.prod.yml
+
+Diferencias con desarrollo:
+- Usa variables de entorno desde archivo .env
+- Configura red interna (no expone BD públicamente)
+- Configuración optimizada para producción
+- Todos los servicios incluidos (backend, frontend, ML service)
+
+================================================================================
+7. USO DE DOCKER EN DESARROLLO
+================================================================================
+
+7.1. INICIAR SOLO LA BASE DE DATOS
+------------------------------------
+
+Si prefieres ejecutar backend/frontend localmente pero usar Docker solo para 
+la base de datos:
+
+```bash
+# Iniciar solo PostgreSQL
+docker-compose up -d db
+
+# Ver logs
+docker-compose logs -f db
+
+# Detener
+docker-compose stop db
+```
+
+La base de datos estará disponible en: localhost:5433
+
+7.2. INICIAR TODOS LOS SERVICIOS
+----------------------------------
+
+```bash
+# Construir imágenes y levantar servicios
+docker-compose up -d
+
+# Ver logs de todos los servicios
+docker-compose logs -f
+
+# Ver logs de un servicio específico
+docker-compose logs -f backend
+docker-compose logs -f db
+```
+
+Servicios disponibles:
+- Backend: http://localhost:8000
+- Frontend: http://localhost:5173
+- Base de datos: localhost:5433
+
+7.3. COMANDOS ÚTILES
+---------------------
+
+```bash
+# Ver servicios corriendo
+docker-compose ps
+
+# Detener todos los servicios
+docker-compose stop
+
+# Detener y eliminar contenedores
+docker-compose down
+
+# Detener, eliminar contenedores y volúmenes (⚠️ BORRA DATOS)
+docker-compose down -v
+
+# Reconstruir imágenes (cuando cambias Dockerfiles)
+docker-compose build
+
+# Reconstruir y reiniciar
+docker-compose up -d --build
+
+# Ejecutar comandos dentro de un contenedor
+docker-compose exec backend python setup_complete_platform.py
+docker-compose exec db psql -U admin -d pai_db
+
+# Ver uso de recursos
+docker stats
+```
+
+7.4. TRABAJAR CON LA BASE DE DATOS
+-----------------------------------
+
+```bash
+# Conectarse a PostgreSQL desde fuera del contenedor
+psql -h localhost -p 5433 -U admin -d pai_db
+
+# O ejecutar comandos dentro del contenedor
+docker-compose exec db psql -U admin -d pai_db
+
+# Ver backups
+docker-compose exec db pg_dump -U admin pai_db > backup.sql
+
+# Restaurar backup
+docker-compose exec -T db psql -U admin pai_db < backup.sql
+```
+
+================================================================================
+8. USO DE DOCKER EN PRODUCCIÓN
+================================================================================
+
+8.1. PREPARAR VARIABLES DE ENTORNO
+-----------------------------------
+
+Crear archivo .env en la raíz del proyecto:
+
+```env
+# Base de Datos
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=TU_PASSWORD_SEGURO_AQUI
+POSTGRES_DB=pai_db
+
+# Backend
+BACKEND_SECRET_KEY=GENERA_UNA_CLAVE_SECRETA_AQUI
+BACKEND_ALGORITHM=HS256
+BACKEND_ACCESS_TOKEN_EXPIRE_MINUTES=30
+BACKEND_CORS_ORIGINS=http://tu-dominio.com,https://tu-dominio.com
+
+# ML Service
+ML_RISK_THRESHOLD=0.5
+```
+
+Generar clave secreta segura:
+```bash
+python3 -c "import secrets; print(secrets.token_hex(32))"
+```
+
+8.2. CONSTRUIR Y LEVANTAR SERVICIOS
+-------------------------------------
+
+```bash
+# Construir todas las imágenes
+docker-compose -f docker-compose.prod.yml build
+
+# Levantar servicios
+docker-compose -f docker-compose.prod.yml up -d
+
+# Ver logs
+docker-compose -f docker-compose.prod.yml logs -f
+
+# Verificar que todos están corriendo
+docker-compose -f docker-compose.prod.yml ps
+```
+
+8.3. INICIALIZAR BASE DE DATOS
+-------------------------------
+
+```bash
+# Esperar a que la BD esté lista
+sleep 10
+
+# Ejecutar script de configuración dentro del contenedor backend
+docker-compose -f docker-compose.prod.yml exec backend \
+  python setup_complete_platform.py
+```
+
+8.4. ACTUALIZAR APLICACIÓN
+---------------------------
+
+```bash
+# Obtener código actualizado
+git pull
+
+# Reconstruir y reiniciar
+docker-compose -f docker-compose.prod.yml up -d --build
+
+# Ver logs para verificar que todo funciona
+docker-compose -f docker-compose.prod.yml logs -f
+```
+
+8.5. BACKUPS REGULARES
+-----------------------
+
+Crear script de backup (backup.sh):
+
+```bash
+#!/bin/bash
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="./backups"
+mkdir -p $BACKUP_DIR
+
+docker-compose -f docker-compose.prod.yml exec -T db \
+  pg_dump -U admin pai_db | gzip > "$BACKUP_DIR/backup_$DATE.sql.gz"
+
+echo "Backup creado: $BACKUP_DIR/backup_$DATE.sql.gz"
+```
+
+Ejecutar:
+```bash
+chmod +x backup.sh
+./backup.sh
+```
+
+Configurar cron para backups automáticos (diarios a las 2 AM):
+```bash
+crontab -e
+# Agregar línea:
+0 2 * * * cd /ruta/al/proyecto && ./backup.sh
+```
+
+================================================================================
+9. RESOLUCIÓN DE PROBLEMAS COMUNES
+================================================================================
+
+9.1. PUERTO YA EN USO
+----------------------
+
+Error: "port is already allocated"
+
+Solución:
+```bash
+# Ver qué está usando el puerto
+# Windows:
+netstat -ano | findstr :8000
+# Linux/Mac:
+lsof -i :8000
+
+# Detener el proceso o cambiar el puerto en docker-compose.yml
+```
+
+9.2. CONTENEDOR NO INICIA
+--------------------------
+
+Error: Contenedor se detiene inmediatamente
+
+Solución:
+```bash
+# Ver logs para entender el error
+docker-compose logs nombre_servicio
+
+# Ejecutar contenedor de forma interactiva para debug
+docker-compose run --rm backend /bin/bash
+```
+
+9.3. ERROR DE PERMISOS
+----------------------
+
+Error: "permission denied"
+
+Solución:
+```bash
+# Linux: Agregar usuario al grupo docker
+sudo usermod -aG docker $USER
+# Cerrar sesión y volver a entrar
+
+# Windows: Ejecutar Docker Desktop como administrador
+```
+
+9.4. IMAGEN NO SE ACTUALIZA
+----------------------------
+
+Problema: Cambios en código no se reflejan
+
+Solución:
+```bash
+# Reconstruir imagen sin cache
+docker-compose build --no-cache
+
+# Reiniciar servicios
+docker-compose up -d --force-recreate
+```
+
+9.5. BASE DE DATOS NO CONECTA
+------------------------------
+
+Error: "connection refused" o "cannot connect to database"
+
+Solución:
+```bash
+# Verificar que la BD está corriendo
+docker-compose ps db
+
+# Ver logs de la BD
+docker-compose logs db
+
+# Verificar variables de entorno
+docker-compose exec backend env | grep DATABASE_URL
+
+# Reiniciar servicios en orden
+docker-compose stop
+docker-compose up -d db
+sleep 5
+docker-compose up -d backend
+```
+
+9.6. DISCO LLENO
+-----------------
+
+Docker puede llenar el disco con imágenes y contenedores antiguos.
+
+Solución:
+```bash
+# Limpiar recursos no usados
+docker system prune -a
+
+# Limpiar volúmenes no usados (⚠️ CUIDADO)
+docker volume prune
+
+# Ver uso de espacio
+docker system df
+```
+
+================================================================================
+10. MEJORES PRÁCTICAS
+================================================================================
+
+10.1. DESARROLLO
+----------------
+
+✅ Usar volúmenes para montar código (cambios se reflejan en vivo)
+✅ Usar docker-compose.yml para desarrollo
+✅ Mantener .env fuera del control de versiones (.gitignore)
+✅ Documentar cambios en Dockerfiles
+
+10.2. PRODUCCIÓN
+----------------
+
+✅ Usar docker-compose.prod.yml
+✅ Variables sensibles en archivo .env (no en código)
+✅ Configurar backups automáticos
+✅ Usar redes internas (no exponer BD públicamente)
+✅ Configurar restart policies (unless-stopped)
+✅ Monitorear logs regularmente
+✅ Mantener imágenes actualizadas (seguridad)
+
+10.3. SEGURIDAD
+---------------
+
+✅ No usar contraseñas por defecto en producción
+✅ Generar SECRET_KEY seguro y único
+✅ No exponer puertos innecesarios
+✅ Usar redes internas para comunicación entre servicios
+✅ Actualizar imágenes base regularmente
+✅ No ejecutar contenedores como root (cuando sea posible)
+
+================================================================================
+11. FLUJO DE TRABAJO RECOMENDADO
+================================================================================
+
+11.1. DESARROLLO LOCAL
+----------------------
+
+1. Iniciar solo la BD con Docker:
+   ```bash
+   docker-compose up -d db
+   ```
+
+2. Ejecutar backend y frontend localmente:
+   ```bash
+   # Terminal 1: Backend
+   cd backend
+   python -m venv venv
+   source venv/bin/activate
+   uvicorn app.main:app --reload
+
+   # Terminal 2: Frontend
+   cd frontend
+   npm run dev
+
+   # Terminal 3: ML Service (opcional)
+   cd ml-service
+   python main.py
+   ```
+
+Ventajas:
+- Cambios en código se reflejan instantáneamente (hot reload)
+- Debugging más fácil
+- Desarrollo más rápido
+
+11.2. TESTING CON DOCKER
+------------------------
+
+1. Levantar todos los servicios con Docker:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. Ejecutar tests:
+   ```bash
+   docker-compose exec backend pytest
+   ```
+
+Ventajas:
+- Entorno idéntico a producción
+- Aislado de tu sistema local
+
+11.3. PRODUCCIÓN
+----------------
+
+1. Usar docker-compose.prod.yml
+2. Configurar variables de entorno
+3. Configurar backups
+4. Monitorear logs
+
+================================================================================
+12. EJEMPLOS PRÁCTICOS
+================================================================================
+
+12.1. PRIMERA VEZ: CONFIGURAR TODO
+-----------------------------------
+
+```bash
+# 1. Clonar repositorio
+git clone https://github.com/Sebv03/PAI-Platform.git
+cd PAI-Platform
+
+# 2. Iniciar solo la base de datos
+docker-compose up -d db
+
+# 3. Esperar a que la BD esté lista
+sleep 5
+
+# 4. Configurar backend localmente
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# 5. Crear archivo .env en backend/
+echo "DATABASE_URL=postgresql://admin:admin@localhost:5433/pai_db" > .env
+
+# 6. Configurar plataforma completa
+python setup_complete_platform.py
+
+# 7. Iniciar backend
+uvicorn app.main:app --reload
+
+# 8. En otra terminal, configurar frontend
+cd frontend
+npm install
+npm run dev
+```
+
+12.2. USAR TODO CON DOCKER
+---------------------------
+
+```bash
+# 1. Levantar todos los servicios
+docker-compose up -d
+
+# 2. Esperar a que todo esté listo
+sleep 10
+
+# 3. Configurar base de datos
+docker-compose exec backend python setup_complete_platform.py
+
+# 4. Verificar que todo funciona
+docker-compose ps
+docker-compose logs
+
+# Acceder a:
+# - Frontend: http://localhost:5173
+# - Backend: http://localhost:8000/docs
+```
+
+12.3. ACTUALIZAR CÓDIGO
+------------------------
+
+```bash
+# 1. Obtener cambios
+git pull
+
+# 2. Si cambió Dockerfile, reconstruir
+docker-compose build backend
+
+# 3. Reiniciar servicio
+docker-compose up -d backend
+
+# 4. Ver logs
+docker-compose logs -f backend
+```
+
+================================================================================
+13. RECURSOS ADICIONALES
+================================================================================
+
+Documentación Oficial:
+- Docker: https://docs.docker.com/
+- Docker Compose: https://docs.docker.com/compose/
+
+Tutoriales Recomendados:
+- Docker en 100 segundos: https://www.youtube.com/watch?v=Gjnup-PuquQ
+- Docker Compose Tutorial: https://docs.docker.com/compose/gettingstarted/
+
+Comandos de Referencia Rápida:
+- docker ps: Ver contenedores corriendo
+- docker images: Ver imágenes
+- docker logs <container>: Ver logs de un contenedor
+- docker exec -it <container> /bin/bash: Entrar a un contenedor
+- docker-compose up: Levantar servicios
+- docker-compose down: Detener servicios
+- docker-compose logs -f: Ver logs en tiempo real
+
+================================================================================
+14. CONCLUSIÓN
+================================================================================
+
+Docker simplifica significativamente el desarrollo y despliegue de la 
+Plataforma PAI:
+
+✅ Facilita el trabajo en equipo (mismo entorno para todos)
+✅ Simplifica el despliegue en producción
+✅ Aísla servicios y evita conflictos
+✅ Permite escalar fácilmente
+✅ Facilita backups y recuperación
+
+Una vez configurado, el uso diario es muy simple:
+- docker-compose up: Iniciar todo
+- docker-compose down: Detener todo
+- docker-compose logs: Ver qué está pasando
+
+¡Docker hace que trabajar con múltiples servicios sea mucho más fácil!
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
+
+Versión: 1.0
+Fecha: Noviembre 2024
+Plataforma: PAI (Plataforma Académica Inteligente)
+
+
+

@@ -1,12 +1,12 @@
 # backend/app/api/endpoints/users.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Any
+from typing import List, Any, Optional
 
 from app.api import deps
 from app.crud import crud_user
 from app.schemas.user import User as UserSchema, UserCreate, UserUpdate
-from app.models.user import User # <-- ¡AQUÍ ESTÁ TU MODELO User de SQLAlchemy!
+from app.models.user import User, UserRole # <-- ¡AQUÍ ESTÁ TU MODELO User de SQLAlchemy!
 
 router = APIRouter()
 
@@ -55,7 +55,7 @@ async def read_user_by_id(
             detail="Usuario no encontrado",
         )
     
-    if current_user.id == user_id or current_user.role == User.UserRole.ADMINISTRADOR: # <-- Acceso a UserRole
+    if current_user.id == user_id or current_user.role == UserRole.ADMINISTRADOR: # <-- Acceso a UserRole
         return user
     
     raise HTTPException(
@@ -74,7 +74,7 @@ async def read_all_users(
     """
     Obtiene una lista de todos los usuarios (solo para administradores).
     """
-    if current_user.role != User.UserRole.ADMINISTRADOR: # <-- Acceso a UserRole
+    if current_user.role != UserRole.ADMINISTRADOR: # <-- Acceso a UserRole
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permiso para ver todos los usuarios."
@@ -82,3 +82,39 @@ async def read_all_users(
     
     users = crud_user.get_users(db, skip=skip, limit=limit)
     return users
+
+# ----------------- Endpoint para buscar estudiantes (Solo Admin) -----------------
+@router.get("/search/students", response_model=List[UserSchema])
+async def search_students(
+    q: Optional[str] = None,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+) -> Any:
+    """
+    Busca estudiantes por nombre o email (solo para administradores).
+    """
+    if current_user.role != UserRole.ADMINISTRADOR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para buscar estudiantes."
+        )
+    
+    if not q or len(q.strip()) < 2:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La búsqueda debe tener al menos 2 caracteres."
+        )
+    
+    from sqlalchemy import or_
+    
+    # Buscar estudiantes por nombre o email
+    search_term = f"%{q.strip().lower()}%"
+    students = db.query(User).filter(
+        User.role == UserRole.ESTUDIANTE,
+        or_(
+            User.full_name.ilike(search_term),
+            User.email.ilike(search_term)
+        )
+    ).limit(50).all()
+    
+    return students

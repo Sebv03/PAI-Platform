@@ -12,6 +12,10 @@ class Course(Base):
     title = Column(String, index=True, nullable=False)
     description = Column(String, nullable=True)
     
+    # Campos opcionales para clasificación PAES (preuniversitaria)
+    subject = Column(String, nullable=True, index=True, comment="Asignatura (ej: Matemáticas, Lenguaje, Ciencias)")
+    paes_topic = Column(String, nullable=True, index=True, comment="Temática PAES (ej: Números, Álgebra, Geometría)")
+    
     created_at = Column(DateTime(timezone=True), server_default=text("NOW()"), nullable=False)
     
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)

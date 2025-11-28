@@ -1,0 +1,85 @@
+# Render Blueprint - Configuración completa para despliegue en Render.com
+# Documentación: https://render.com/docs/blueprint-spec
+
+services:
+  # Base de datos PostgreSQL
+  - type: pspg
+    name: pai-database
+    databaseName: pai_db
+    user: admin
+    plan: free
+    region: oregon  # Cambiar según tu ubicación (oregon, frankfurt, singapore)
+    postgresMajorVersion: 15
+
+  # Backend API (FastAPI)
+  - type: web
+    name: pai-backend
+    runtime: python
+    plan: free
+    region: oregon  # Debe coincidir con la región de la BD
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pai-database
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+      - key: BACKEND_CORS_ORIGINS
+        value: https://pai-frontend.onrender.com
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    rootDir: backend
+
+  # ML Service (FastAPI)
+  - type: web
+    name: pai-ml-service
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pai-database
+          property: connectionString
+      - key: CORS_ORIGINS
+        value: https://pai-frontend.onrender.com
+      - key: MODEL_PATH
+        value: models/risk_prediction_model.pkl
+      - key: MODEL_DIR
+        value: models
+      - key: RISK_THRESHOLD
+        value: 0.5
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    rootDir: ml-service
+
+  # Frontend (React + Vite)
+  - type: web
+    name: pai-frontend
+    runtime: static
+    plan: free
+    region: oregon
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://pai-backend.onrender.com
+      - key: VITE_ML_SERVICE_URL
+        value: https://pai-ml-service.onrender.com
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+
+

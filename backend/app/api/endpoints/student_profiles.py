@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import Any
 
 from app.api import deps
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.crud import crud_student_profile
 from app.schemas.student_profile import (
     StudentProfile,
@@ -25,7 +25,7 @@ async def create_student_profile(
     Crea o actualiza el perfil del estudiante actual.
     Solo estudiantes pueden crear/actualizar su propio perfil.
     """
-    if current_user.role != User.UserRole.ESTUDIANTE:
+    if current_user.role != UserRole.ESTUDIANTE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo los estudiantes pueden completar el cuestionario de perfil."
@@ -61,7 +61,7 @@ async def get_my_student_profile(
     """
     Obtiene el perfil del estudiante actual.
     """
-    if current_user.role != User.UserRole.ESTUDIANTE:
+    if current_user.role != UserRole.ESTUDIANTE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo los estudiantes pueden ver su perfil."
@@ -88,7 +88,7 @@ async def get_student_profile_by_id(
     Solo administradores, docentes o el propio estudiante pueden ver el perfil.
     """
     # Verificar permisos
-    if current_user.role not in [User.UserRole.ADMINISTRADOR, User.UserRole.DOCENTE]:
+    if current_user.role not in [UserRole.ADMINISTRADOR, UserRole.DOCENTE]:
         if current_user.id != student_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -114,7 +114,7 @@ async def update_my_student_profile(
     """
     Actualiza el perfil del estudiante actual.
     """
-    if current_user.role != User.UserRole.ESTUDIANTE:
+    if current_user.role != UserRole.ESTUDIANTE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo los estudiantes pueden actualizar su perfil."

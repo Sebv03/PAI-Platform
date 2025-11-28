@@ -1,0 +1,861 @@
+================================================================================
+GUÍA COMPLETA DE HOSTING GRATUITO PARA PLATAFORMA PAI
+================================================================================
+
+Esta guía te mostrará las mejores opciones GRATUITAS para hostear tu proyecto
+en internet, incluyendo configuración paso a paso.
+
+================================================================================
+1. RESUMEN DE OPCIONES GRATUITAS
+================================================================================
+
+Para tu proyecto (Backend FastAPI + Frontend React + PostgreSQL + ML Service),
+aquí están las mejores opciones:
+
+✅ RECOMENDADAS (Más fáciles de configurar):
+   1. Render.com - ⭐ MEJOR OPCIÓN COMPLETA
+   2. Railway.app - Excelente alternativa
+   3. Fly.io - Buena para microservicios
+
+✅ PARA COMPONENTES INDIVIDUALES:
+   4. Vercel/Netlify - Frontend React (muy fácil)
+   5. Supabase - PostgreSQL gratuito
+   6. PythonAnywhere - Backend Python
+
+✅ PARA VPS GRATUITO:
+   7. Oracle Cloud Free Tier - VPS permanente gratuito
+
+================================================================================
+2. OPCIÓN 1: RENDER.COM (⭐ RECOMENDADA)
+================================================================================
+
+Render es la MEJOR opción para tu proyecto porque:
+- ✅ Hosting gratuito para todos tus servicios
+- ✅ PostgreSQL gratuito incluido
+- ✅ Deploy automático desde GitHub
+- ✅ SSL gratuito automático
+- ✅ Muy fácil de configurar
+- ✅ Soporta Docker y aplicaciones nativas
+
+2.1. LIMITACIONES DEL PLAN GRATUITO
+------------------------------------
+
+⚠️ IMPORTANTE: Conoce las limitaciones:
+- Los servicios gratuitos se "duermen" después de 15 min sin actividad
+- Despertar toma ~30 segundos (primera petición)
+- PostgreSQL gratuito tiene límite de 90 días sin uso (luego se elimina)
+- Límite de 750 horas/mes por servicio (suficiente para uso personal)
+- 1 GB RAM y 0.25 CPU por servicio
+- Para proyectos de producción activos, considera el plan de pago ($7/servicio)
+
+2.2. REGISTRO Y CONFIGURACIÓN INICIAL
+--------------------------------------
+
+1. Crear cuenta:
+   - Ir a: https://render.com
+   - Click en "Get Started for Free"
+   - Registrarse con GitHub (recomendado) o email
+
+2. Conectar repositorio:
+   - Click en "New +" → "Web Service"
+   - Conectar tu repositorio GitHub
+   - Seleccionar el repositorio PAI-Platform
+
+2.3. CONFIGURAR POSTGRESQL (Base de Datos)
+-------------------------------------------
+
+1. Crear base de datos:
+   - Click en "New +" → "PostgreSQL"
+   - Nombre: "pai-database"
+   - Plan: Free
+   - Región: Elige la más cercana (ej: Oregon, US)
+   - Click "Create Database"
+
+2. Guardar credenciales:
+   - En el dashboard de la BD, verás:
+     - Internal Database URL (para conectar desde Render)
+     - External Database URL (para conectar desde fuera)
+   - ⚠️ IMPORTANTE: Guarda estas URLs, las necesitarás después
+
+2.4. CONFIGURAR BACKEND (FastAPI)
+----------------------------------
+
+1. Crear Web Service:
+   - Click en "New +" → "Web Service"
+   - Conectar repositorio: PAI-Platform
+   - Nombre: "pai-backend"
+
+2. Configuración:
+   ```
+   Name: pai-backend
+   Environment: Python 3
+   Region: (misma que la BD)
+   Branch: main (o master)
+   Root Directory: backend
+   Build Command: pip install -r requirements.txt
+   Start Command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+   ```
+
+3. Variables de Entorno:
+   Click en "Environment" y agregar:
+   ```
+   DATABASE_URL = [Internal Database URL de PostgreSQL]
+   SECRET_KEY = [Genera una clave: python -c "import secrets; print(secrets.token_hex(32))"]
+   ALGORITHM = HS256
+   ACCESS_TOKEN_EXPIRE_MINUTES = 30
+   BACKEND_CORS_ORIGINS = https://tu-frontend.onrender.com
+   ```
+
+4. Guardar y desplegar:
+   - Click "Create Web Service"
+   - Render construirá y desplegará automáticamente
+   - URL del backend: https://pai-backend.onrender.com
+
+2.5. CONFIGURAR ML SERVICE
+---------------------------
+
+1. Crear otro Web Service:
+   - Click en "New +" → "Web Service"
+   - Repositorio: PAI-Platform
+   - Nombre: "pai-ml-service"
+
+2. Configuración:
+   ```
+   Name: pai-ml-service
+   Environment: Python 3
+   Root Directory: ml-service
+   Build Command: pip install -r requirements.txt
+   Start Command: uvicorn main:app --host 0.0.0.0 --port $PORT
+   ```
+
+3. Variables de Entorno:
+   ```
+   DATABASE_URL = [Internal Database URL]
+   CORS_ORIGINS = https://tu-frontend.onrender.com
+   MODEL_PATH = models/risk_prediction_model.pkl
+   RISK_THRESHOLD = 0.5
+   ```
+
+2.6. CONFIGURAR FRONTEND (React)
+---------------------------------
+
+1. Crear Static Site:
+   - Click en "New +" → "Static Site"
+   - Repositorio: PAI-Platform
+   - Nombre: "pai-frontend"
+
+2. Configuración:
+   ```
+   Name: pai-frontend
+   Root Directory: frontend
+   Build Command: npm install && npm run build
+   Publish Directory: dist
+   ```
+
+3. Variables de Entorno (para el build):
+   ```
+   VITE_API_BASE_URL = https://pai-backend.onrender.com
+   VITE_ML_SERVICE_URL = https://pai-ml-service.onrender.com
+   ```
+
+4. IMPORTANTE - Actualizar frontend/.env:
+   Crear archivo `frontend/.env.production`:
+   ```
+   VITE_API_BASE_URL=https://pai-backend.onrender.com
+   VITE_ML_SERVICE_URL=https://pai-ml-service.onrender.com
+   ```
+
+2.7. INICIALIZAR BASE DE DATOS
+-------------------------------
+
+Una vez que todo esté desplegado:
+
+1. Usar Render Shell (o conexión externa):
+   - En el dashboard del backend, click en "Shell"
+   - O conectarte localmente usando la External Database URL
+
+2. Ejecutar scripts de inicialización:
+   ```bash
+   # Instalar dependencias localmente
+   cd backend
+   pip install -r requirements.txt
+   
+   # Configurar DATABASE_URL
+   export DATABASE_URL="[External Database URL de Render]"
+   
+   # Ejecutar setup
+   python setup_complete_platform.py
+   ```
+
+2.8. CONFIGURAR CORS
+--------------------
+
+Actualizar BACKEND_CORS_ORIGINS en el backend:
+```
+BACKEND_CORS_ORIGINS = https://pai-frontend.onrender.com
+```
+
+2.9. VENTAJAS Y DESVENTAJAS
+----------------------------
+
+✅ Ventajas:
+   - Muy fácil de configurar
+   - Deploy automático desde GitHub
+   - SSL gratuito
+   - PostgreSQL incluido
+   - Buena documentación
+
+❌ Desventajas:
+   - Servicios gratuitos se duermen (15 min inactivos)
+   - Primera carga lenta (~30 seg)
+   - PostgreSQL se elimina después de 90 días sin uso
+   - Límites de recursos
+
+================================================================================
+3. OPCIÓN 2: RAILWAY.APP
+================================================================================
+
+Railway es una excelente alternativa a Render, con características similares.
+
+3.1. REGISTRO
+-------------
+
+1. Ir a: https://railway.app
+2. Click "Start a New Project"
+3. Iniciar sesión con GitHub
+
+3.2. CREAR BASE DE DATOS
+-------------------------
+
+1. Click "New Project" → "Provision PostgreSQL"
+2. Railway creará automáticamente una BD PostgreSQL
+3. Las credenciales están en las variables de entorno
+
+3.3. DESPLEGAR BACKEND
+-----------------------
+
+1. Click "New" → "GitHub Repo"
+2. Seleccionar repositorio PAI-Platform
+3. Railway detectará automáticamente que es Python
+4. Configurar:
+   - Root Directory: backend
+   - Start Command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+
+5. Variables de Entorno:
+   Railway conecta automáticamente la BD. Agregar:
+   ```
+   SECRET_KEY = [generar clave]
+   BACKEND_CORS_ORIGINS = https://tu-frontend.railway.app
+   ```
+
+3.4. DESPLEGAR ML SERVICE
+--------------------------
+
+Similar al backend, crear otro servicio desde el mismo repositorio:
+- Root Directory: ml-service
+- Start Command: uvicorn main:app --host 0.0.0.0 --port $PORT
+
+3.5. DESPLEGAR FRONTEND
+------------------------
+
+1. Click "New" → "GitHub Repo" (mismo repositorio)
+2. Root Directory: frontend
+3. Build Command: npm install && npm run build
+4. Start Command: npm run preview (o usar nginx)
+
+3.6. PLAN GRATUITO
+-------------------
+
+- $5 créditos gratis al mes
+- Se cobra por uso (aproximadamente $0.01/hora por servicio)
+- Los créditos pueden durar bastante si el uso es moderado
+- No se duerme como Render
+
+3.7. VENTAJAS Y DESVENTAJAS
+----------------------------
+
+✅ Ventajas:
+   - No se duerme (servicios siempre activos)
+   - Más rápido que Render
+   - Integración excelente con GitHub
+   - PostgreSQL automático
+
+❌ Desventajas:
+   - Créditos limitados ($5/mes)
+   - Puede cobrar si superas los créditos
+   - Menos documentación que Render
+
+================================================================================
+4. OPCIÓN 3: FLY.IO
+================================================================================
+
+Fly.io es excelente para aplicaciones distribuidas y microservicios.
+
+4.1. INSTALACIÓN Y REGISTRO
+----------------------------
+
+1. Instalar Fly CLI:
+   ```bash
+   # Windows (PowerShell)
+   powershell -Command "iwr https://fly.io/install.ps1 -useb | iex"
+   
+   # Mac/Linux
+   curl -L https://fly.io/install.sh | sh
+   ```
+
+2. Registrarse:
+   ```bash
+   fly auth signup
+   ```
+
+4.2. CONFIGURAR PROYECTO
+-------------------------
+
+1. Inicializar proyecto en el backend:
+   ```bash
+   cd backend
+   fly launch
+   ```
+
+2. Fly detectará Python y creará un archivo `fly.toml`
+
+3. Modificar `fly.toml`:
+   ```toml
+   app = "pai-backend"
+   primary_region = "iad"  # Región más cercana
+   
+   [build]
+   
+   [http_service]
+     internal_port = 8000
+     force_https = true
+     auto_stop_machines = true
+     auto_start_machines = true
+     min_machines_running = 0
+     processes = ["app"]
+   
+   [[services]]
+     http_checks = []
+     internal_port = 8000
+     processes = ["app"]
+     protocol = "tcp"
+     script_checks = []
+   ```
+
+4. Crear archivo `Dockerfile` (si no existe) o usar el existente
+
+5. Desplegar:
+   ```bash
+   fly deploy
+   ```
+
+4.3. CREAR POSTGRESQL
+----------------------
+
+```bash
+fly postgres create --name pai-db --region iad --vm-size shared-cpu-1x --volume-size 3
+```
+
+4.4. CONECTAR BD AL BACKEND
+----------------------------
+
+```bash
+fly postgres attach pai-db -a pai-backend
+```
+
+Esto configurará automáticamente DATABASE_URL
+
+4.5. PLAN GRATUITO
+-------------------
+
+- 3 máquinas compartidas gratuitas
+- 3GB volumen de almacenamiento
+- 160GB transferencia de datos/mes
+- PostgreSQL: $0.01/GB/hora (aproximadamente $1-2/mes para BD pequeña)
+
+4.6. VENTAJAS Y DESVENTAJAS
+----------------------------
+
+✅ Ventajas:
+   - Muy flexible
+   - Buena para microservicios
+   - Distribución global
+   - CLI potente
+
+❌ Desventajas:
+   - Más complejo de configurar
+   - Requiere conocimiento de Docker/CLI
+   - PostgreSQL no es completamente gratuito
+
+================================================================================
+5. OPCIÓN 4: COMBINACIÓN VERCEL + SUPABASE
+================================================================================
+
+Para una solución más modular, puedes usar:
+- Vercel: Frontend React (gratis, excelente)
+- Supabase: PostgreSQL gratuito (muy generoso)
+- Backend: PythonAnywhere o Render
+
+5.1. VERCEL PARA FRONTEND
+--------------------------
+
+1. Ir a: https://vercel.com
+2. Iniciar sesión con GitHub
+3. Click "New Project" → Importar repositorio
+4. Configuración:
+   - Framework Preset: Vite
+   - Root Directory: frontend
+   - Build Command: npm run build
+   - Output Directory: dist
+   - Install Command: npm install
+
+5. Variables de Entorno:
+   ```
+   VITE_API_BASE_URL = https://tu-backend.railway.app
+   VITE_ML_SERVICE_URL = https://tu-ml-service.railway.app
+   ```
+
+6. Desplegar - Vercel lo hace automáticamente
+
+✅ Ventajas de Vercel:
+   - Extremadamente rápido
+   - CDN global
+   - Deploy instantáneo
+   - SSL automático
+   - Completamente gratis para proyectos personales
+
+5.2. SUPABASE PARA POSTGRESQL
+------------------------------
+
+1. Ir a: https://supabase.com
+2. Crear cuenta → "Start your project"
+3. Crear nuevo proyecto:
+   - Nombre: pai-platform
+   - Contraseña de BD: [generar una segura]
+   - Región: más cercana
+
+4. Obtener credenciales:
+   - Ir a Settings → Database
+   - Copiar "Connection string" (URI)
+   - Formato: postgresql://postgres:[password]@db.xxx.supabase.co:5432/postgres
+
+5. Ventajas de Supabase:
+   - 500MB base de datos gratis (más que suficiente para empezar)
+   - 2GB de transferencia/mes
+   - No se elimina automáticamente
+   - Interfaz web para gestionar datos
+   - API REST automática
+
+5.3. COMBINACIÓN RECOMENDADA
+-----------------------------
+
+Frontend → Vercel (gratis, excelente)
+Backend → Render o Railway (gratis)
+ML Service → Render o Railway (gratis)
+PostgreSQL → Supabase (gratis, generoso)
+
+Esta combinación aprovecha lo mejor de cada plataforma.
+
+================================================================================
+6. OPCIÓN 5: ORACLE CLOUD FREE TIER (VPS GRATUITO)
+================================================================================
+
+Oracle ofrece un VPS completamente gratuito de forma permanente (no es trial).
+
+6.1. QUÉ INCLUYE
+----------------
+
+- 2 instancias VM (Always Free)
+- 1/8 OCPU y 1GB RAM cada una
+- 200GB almacenamiento
+- 10TB transferencia de datos/mes
+- Sin expiración (permanente)
+
+6.2. REGISTRO
+-------------
+
+1. Ir a: https://www.oracle.com/cloud/free/
+2. Click "Start for Free"
+3. Completar registro (requiere tarjeta de crédito, pero NO se cobra)
+4. Verificar email y teléfono
+
+6.3. CREAR INSTANCIA
+---------------------
+
+1. En el dashboard: "Create a VM instance"
+2. Configuración:
+   - Name: pai-platform
+   - Image: Ubuntu 22.04
+   - Shape: VM.Standard.A1.Flex (Always Free)
+   - OCPUs: 1
+   - Memory: 1GB
+   - Boot volume: 50GB (gratis)
+   - SSH Keys: Generar y descargar
+
+3. Crear instancia
+
+6.4. CONECTAR Y CONFIGURAR
+---------------------------
+
+1. Obtener IP pública de la instancia
+2. Conectar via SSH:
+   ```bash
+   ssh -i ruta/a/tu-key.pem ubuntu@[IP_PUBLICA]
+   ```
+
+3. Instalar Docker (como en GUIA_DESPLIEGUE.md):
+   ```bash
+   curl -fsSL https://get.docker.com -o get-docker.sh
+   sudo sh get-docker.sh
+   sudo usermod -aG docker ubuntu
+   ```
+
+4. Clonar repositorio y desplegar:
+   ```bash
+   git clone https://github.com/Sebv03/PAI-Platform.git
+   cd PAI-Platform
+   # Configurar .env
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
+
+6.5. CONFIGURAR FIREWALL
+-------------------------
+
+En Oracle Cloud Dashboard:
+- Security Lists → Ingress Rules
+- Agregar reglas para:
+  - Puerto 80 (HTTP)
+  - Puerto 443 (HTTPS)
+  - Puerto 8000 (Backend, opcional)
+  - Puerto 5173 (Frontend, opcional)
+
+6.6. CONFIGURAR DOMINIO Y SSL
+------------------------------
+
+1. Configurar DNS para apuntar a la IP pública
+2. Instalar Nginx y Certbot:
+   ```bash
+   sudo apt install nginx certbot python3-certbot-nginx
+   sudo certbot --nginx -d tu-dominio.com
+   ```
+
+6.7. VENTAJAS Y DESVENTAJAS
+----------------------------
+
+✅ Ventajas:
+   - Completamente gratis (sin límite de tiempo)
+   - Control total (tu propio servidor)
+   - Sin límites de "sueño"
+   - Buena cantidad de recursos
+
+❌ Desventajas:
+   - Requiere más conocimiento técnico
+   - Tú eres responsable de seguridad y mantenimiento
+   - Configuración más compleja
+   - Proceso de registro más largo
+
+================================================================================
+7. CONFIGURACIÓN PASO A PASO: RENDER.COM (RECOMENDADO)
+================================================================================
+
+Esta es una guía detallada para desplegar todo en Render.
+
+7.1. PREPARAR REPOSITORIO
+--------------------------
+
+1. Asegúrate de que tu código está en GitHub
+2. Verificar que los archivos de configuración estén correctos:
+   - backend/requirements.txt
+   - ml-service/requirements.txt
+   - frontend/package.json
+
+7.2. CREAR POSTGRESQL EN RENDER
+--------------------------------
+
+1. Login en Render.com
+2. Click "New +" → "PostgreSQL"
+3. Configurar:
+   ```
+   Name: pai-platform-db
+   Database: pai_db
+   User: admin (o dejar por defecto)
+   Region: Oregon (o más cercano)
+   PostgreSQL Version: 15
+   Plan: Free
+   ```
+4. Click "Create Database"
+5. ⚠️ IMPORTANTE: Copiar "Internal Database URL"
+   Ejemplo: postgresql://admin:xxx@dpg-xxx-xxx/pai_db
+
+7.3. DESPLEGAR BACKEND
+-----------------------
+
+1. Click "New +" → "Web Service"
+2. Conectar repositorio GitHub → PAI-Platform
+3. Configurar:
+   ```
+   Name: pai-backend
+   Region: (misma que BD)
+   Branch: main
+   Root Directory: backend
+   Runtime: Python 3
+   Build Command: pip install -r requirements.txt
+   Start Command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+   ```
+4. Plan: Free
+5. Variables de Entorno:
+   ```
+   DATABASE_URL = [Internal Database URL]
+   SECRET_KEY = [Generar con: python -c "import secrets; print(secrets.token_hex(32))"]
+   ALGORITHM = HS256
+   ACCESS_TOKEN_EXPIRE_MINUTES = 30
+   PYTHON_VERSION = 3.11
+   ```
+6. Click "Create Web Service"
+7. Esperar a que se construya (5-10 min)
+8. URL del backend: https://pai-backend.onrender.com
+
+7.4. DESPLEGAR ML SERVICE
+--------------------------
+
+1. Click "New +" → "Web Service"
+2. Mismo repositorio: PAI-Platform
+3. Configurar:
+   ```
+   Name: pai-ml-service
+   Root Directory: ml-service
+   Build Command: pip install -r requirements.txt
+   Start Command: uvicorn main:app --host 0.0.0.0 --port $PORT
+   ```
+4. Variables de Entorno:
+   ```
+   DATABASE_URL = [Internal Database URL]
+   CORS_ORIGINS = https://pai-frontend.onrender.com
+   MODEL_PATH = models/risk_prediction_model.pkl
+   RISK_THRESHOLD = 0.5
+   ```
+5. Crear servicio
+
+7.5. ACTUALIZAR CORS DEL BACKEND
+---------------------------------
+
+En el backend, actualizar variable:
+```
+BACKEND_CORS_ORIGINS = https://pai-frontend.onrender.com
+```
+
+7.6. DESPLEGAR FRONTEND
+------------------------
+
+1. Crear archivo `frontend/.env.production`:
+   ```
+   VITE_API_BASE_URL=https://pai-backend.onrender.com
+   VITE_ML_SERVICE_URL=https://pai-ml-service.onrender.com
+   ```
+
+2. En Render:
+   - Click "New +" → "Static Site"
+   - Repositorio: PAI-Platform
+   - Configurar:
+     ```
+     Name: pai-frontend
+     Root Directory: frontend
+     Build Command: npm install && npm run build
+     Publish Directory: dist
+     ```
+   - Environment Variables (para el build):
+     ```
+     VITE_API_BASE_URL = https://pai-backend.onrender.com
+     VITE_ML_SERVICE_URL = https://pai-ml-service.onrender.com
+     ```
+
+7.7. INICIALIZAR BASE DE DATOS
+-------------------------------
+
+Opción 1: Desde tu computadora local
+```bash
+cd backend
+export DATABASE_URL="[External Database URL de Render]"
+python setup_complete_platform.py
+```
+
+Opción 2: Usando Render Shell
+1. En el dashboard del backend → "Shell"
+2. Ejecutar:
+   ```bash
+   python setup_complete_platform.py
+   ```
+
+7.8. VERIFICAR QUE TODO FUNCIONA
+---------------------------------
+
+1. Frontend: https://pai-frontend.onrender.com
+2. Backend API: https://pai-backend.onrender.com/docs
+3. ML Service: https://pai-ml-service.onrender.com/docs
+
+7.9. NOTAS IMPORTANTES
+-----------------------
+
+⚠️ Primera carga:
+   - La primera vez que accedes después de 15 min de inactividad,
+     puede tardar 30-60 segundos en cargar (el servicio se "despierta")
+
+⚠️ PostgreSQL gratuito:
+   - Se elimina después de 90 días sin uso
+   - Si planeas usarlo activamente, esto no será problema
+
+⚠️ Límites del plan gratuito:
+   - 750 horas/mes (suficiente para 24/7)
+   - Servicios se duermen después de 15 min
+   - 1GB RAM por servicio (suficiente para este proyecto)
+
+================================================================================
+8. COMPARACIÓN RÁPIDA DE OPCIONES
+================================================================================
+
+┌──────────────────┬──────────┬──────────┬──────────┬──────────┐
+│ Característica   │ Render   │ Railway  │ Fly.io   │ Oracle   │
+├──────────────────┼──────────┼──────────┼──────────┼──────────┤
+│ Facilidad        │ ⭐⭐⭐⭐⭐ │ ⭐⭐⭐⭐   │ ⭐⭐⭐     │ ⭐⭐       │
+│ Postgres Gratis  │ ✅ (90d) │ ✅       │ ❌        │ ✅       │
+│ Se Duerme        │ ✅ (15m) │ ❌       │ ❌        │ ❌       │
+│ SSL Gratis       │ ✅       │ ✅       │ ✅        │ ✅       │
+│ Deploy Auto      │ ✅       │ ✅       │ ✅        │ Manual   │
+│ Control Total    │ ⭐⭐     │ ⭐⭐⭐    │ ⭐⭐⭐⭐   │ ⭐⭐⭐⭐⭐ │
+│ Permanente       │ ✅       │ ⚠️ Créd. │ ⚠️ Lím.   │ ✅       │
+└──────────────────┴──────────┴──────────┴──────────┴──────────┘
+
+RECOMENDACIÓN GENERAL:
+- Principiantes → Render.com
+- Experiencia media → Railway.app
+- Control total → Oracle Cloud Free Tier
+- Frontend separado → Vercel + Supabase + Render/Railway
+
+================================================================================
+9. TROUBLESHOOTING COMÚN
+================================================================================
+
+9.1. RENDER: SERVICIO NO INICIA
+---------------------------------
+
+Problema: El servicio muestra "Failed" en el dashboard
+
+Solución:
+1. Ver logs: Click en el servicio → "Logs"
+2. Verificar:
+   - Build Command correcto
+   - Start Command correcto
+   - Variables de entorno configuradas
+   - Puerto usando $PORT (no hardcodeado)
+
+Ejemplo de Start Command correcto:
+```
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+9.2. ERROR DE CORS
+-------------------
+
+Problema: Frontend no puede conectar con backend
+
+Solución:
+1. Verificar BACKEND_CORS_ORIGINS en backend:
+   ```
+   BACKEND_CORS_ORIGINS = https://tu-frontend.onrender.com
+   ```
+2. No incluir "/" al final
+3. Incluir protocolo (https://)
+
+9.3. BASE DE DATOS NO CONECTA
+-------------------------------
+
+Problema: Backend no puede conectar a PostgreSQL
+
+Solución:
+1. Verificar que DATABASE_URL usa "Internal Database URL" (no External)
+2. Verificar formato: postgresql://user:pass@host:port/dbname
+3. Verificar que la BD está en la misma región
+
+9.4. FRONTEND: VARIABLES DE ENTORNO NO FUNCIONAN
+-------------------------------------------------
+
+Problema: Frontend no encuentra las URLs del backend
+
+Solución:
+1. Variables de Vite deben empezar con VITE_
+2. Reconstruir después de cambiar variables
+3. Verificar en Network tab del navegador qué URLs está usando
+
+9.5. SERVICIO SE DUERME MUY RÁPIDO
+-----------------------------------
+
+Solución (solo Render):
+- No hay forma de evitar que se duerma en plan gratuito
+- Considera:
+  - Usar un servicio de "ping" periódico (ej: UptimeRobot gratis)
+  - Actualizar a plan de pago ($7/mes)
+  - Usar Railway o Fly.io (no se duermen)
+
+================================================================================
+10. RECOMENDACIÓN FINAL
+================================================================================
+
+Para tu proyecto PAI Platform, recomiendo:
+
+OPCIÓN 1 (Más Fácil): Render.com
+- Despliega todo en un solo lugar
+- Configuración muy simple
+- Ideal para proyectos de prueba/desarrollo
+
+OPCIÓN 2 (Mejor Rendimiento): Combinación
+- Frontend → Vercel (gratis, rápido, CDN global)
+- Backend → Railway o Render
+- ML Service → Railway o Render
+- PostgreSQL → Supabase (más generoso que Render)
+
+OPCIÓN 3 (Control Total): Oracle Cloud
+- VPS gratuito permanente
+- Control completo
+- Más trabajo de configuración
+
+PASOS INMEDIATOS:
+1. Crear cuenta en Render.com
+2. Seguir sección 7 de esta guía (paso a paso Render)
+3. Probar que todo funciona
+4. Compartir URLs con usuarios
+
+¡Tu plataforma estará en internet de forma gratuita en menos de 1 hora!
+
+================================================================================
+11. ENLACES ÚTILES
+================================================================================
+
+Plataformas:
+- Render: https://render.com
+- Railway: https://railway.app
+- Fly.io: https://fly.io
+- Vercel: https://vercel.com
+- Supabase: https://supabase.com
+- Oracle Cloud: https://www.oracle.com/cloud/free/
+
+Herramientas:
+- Generar SECRET_KEY: https://www.allkeysgenerator.com/Random/Security-Encryption-Key-Generator.aspx
+- Verificar SSL: https://www.ssllabs.com/ssltest/
+- Monitoreo gratuito: https://uptimerobot.com (evitar que servicios se duerman)
+
+Documentación:
+- Render Docs: https://render.com/docs
+- Railway Docs: https://docs.railway.app
+- Vite Env Variables: https://vitejs.dev/guide/env-and-mode.html
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
+
+Versión: 1.0
+Fecha: Noviembre 2024
+Plataforma: PAI (Plataforma Académica Inteligente)
+
+¡Buena suerte con tu despliegue! 🚀
+
+

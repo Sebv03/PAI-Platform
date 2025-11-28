@@ -95,3 +95,35 @@ async def train_ml_model() -> Optional[Dict[str, Any]]:
         print(f"Error inesperado al entrenar modelo: {e}")
         return None
 
+
+async def get_student_profile_prediction(
+    student_id: int
+) -> Optional[Dict[str, Any]]:
+    """
+    Obtiene la predicción de riesgo para un estudiante basándose solo en su perfil del cuestionario.
+    No requiere que el estudiante esté inscrito en un curso.
+    
+    Args:
+        student_id: ID del estudiante
+    
+    Returns:
+        Dict con la predicción o None si hay error
+    """
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{ML_SERVICE_URL}/predict/profile",
+                json={"student_id": student_id}
+            )
+            response.raise_for_status()
+            return response.json()
+    except httpx.RequestError as e:
+        print(f"Error al conectar con el servicio ML: {e}")
+        return None
+    except httpx.HTTPStatusError as e:
+        print(f"Error HTTP del servicio ML: {e}")
+        return None
+    except Exception as e:
+        print(f"Error inesperado al obtener predicción de perfil: {e}")
+        return None
+

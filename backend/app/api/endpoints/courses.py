@@ -7,6 +7,7 @@ from app.crud import crud_course
 from app.schemas.course import Course as CourseSchema, CourseCreate, CourseUpdate
 from app.models.user import User # Importa el modelo User
 from app.models.user import UserRole # Importa UserRole para la comparación de roles
+from app.api.endpoints.courses_helper import format_course_response
 
 router = APIRouter()
 
@@ -40,6 +41,8 @@ async def read_all_courses(
             "id": course.id,
             "title": course.title,
             "description": course.description,
+            "subject": getattr(course, 'subject', None),
+            "paes_topic": getattr(course, 'paes_topic', None),
             "owner_id": course.owner_id,
             "owner_name": None,
             "owner_email": None,
@@ -81,6 +84,8 @@ async def create_course(
         "id": course.id,
         "title": course.title,
         "description": course.description,
+        "subject": getattr(course, 'subject', None),
+        "paes_topic": getattr(course, 'paes_topic', None),
         "owner_id": course.owner_id,
         "owner_name": None,
         "owner_email": None,
@@ -121,6 +126,8 @@ async def read_current_user_courses(
             "id": course.id,
             "title": course.title,
             "description": course.description,
+            "subject": getattr(course, 'subject', None),
+            "paes_topic": getattr(course, 'paes_topic', None),
             "owner_id": course.owner_id,
             "owner_name": None,
             "owner_email": None,
@@ -168,6 +175,8 @@ async def read_available_courses(
             "id": course.id,
             "title": course.title,
             "description": course.description,
+            "subject": getattr(course, 'subject', None),
+            "paes_topic": getattr(course, 'paes_topic', None),
             "owner_id": course.owner_id,
             "owner_name": None,
             "owner_email": None,
@@ -211,6 +220,8 @@ async def read_course_by_id(
         "id": course.id,
         "title": course.title,
         "description": course.description,
+        "subject": getattr(course, 'subject', None),
+        "paes_topic": getattr(course, 'paes_topic', None),
         "owner_id": course.owner_id,
         "owner_name": None,
         "owner_email": None,
@@ -262,6 +273,8 @@ async def update_existing_course(
         "id": course.id,
         "title": course.title,
         "description": course.description,
+        "subject": getattr(course, 'subject', None),
+        "paes_topic": getattr(course, 'paes_topic', None),
         "owner_id": course.owner_id,
         "owner_name": None,
         "owner_email": None,

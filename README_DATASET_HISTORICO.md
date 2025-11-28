@@ -10,7 +10,7 @@ Este documento explica cómo obtener y usar el dataset histórico real que usa l
 - Datos reales de la base de datos de la plataforma
 - Misma estructura que usa el ML service
 - Misma query que ejecuta el modelo para entrenar
-- Datos históricos generados por `populate_historical_data.py`
+- Datos históricos generados por `populate_paes_historical_data.py`
 
 ## 🚀 Cómo Exportar el Dataset
 
@@ -22,7 +22,7 @@ python export_historical_data_to_csv.py
 
 **Requisitos**:
 - La base de datos debe estar corriendo
-- Debe tener datos históricos (ejecutar `populate_historical_data.py` primero)
+- Debe tener datos históricos (ejecutar `backend/populate_paes_historical_data.py` primero)
 - Debe tener acceso a la base de datos configurada en `backend/app/core/config.py`
 
 ## 📋 Estructura del CSV
@@ -51,17 +51,17 @@ El CSV contiene las mismas columnas que usa el ML service:
 2. **Subir el CSV a Colab**:
    ```python
    from google.colab import files
-   uploaded = files.upload()  # Selecciona historical_dataset.csv
-   df = pd.read_csv('historical_dataset.csv')
+   uploaded = files.upload()  # Selecciona historical_dataset_with_profiles.csv
+   df = pd.read_csv('historical_dataset_with_profiles.csv')
    ```
 
 3. **O cargar desde GitHub** (si lo subiste):
    ```python
-   url = "https://raw.githubusercontent.com/Sebv03/PAI-Platform/main/datasets/historical_dataset.csv"
+   url = "https://raw.githubusercontent.com/Sebv03/PAI-Platform/main/datasets/historical_dataset_with_profiles.csv"
    df = pd.read_csv(url)
    ```
 
-4. **Seguir la guía**: `GUIA_COLAB_CON_CSV.md` (usa `historical_dataset.csv` en lugar de `test_dataset.csv`)
+4. **Seguir la guía**: Ver `GUIA_COLAB_MODELO_COMPLETO.md` para instrucciones completas
 
 ## 📈 Datos del Dataset
 
@@ -77,11 +77,12 @@ El CSV contiene las mismas columnas que usa el ML service:
 ### Origen de los Datos
 
 Los datos provienen de:
-- Usuarios creados por `populate_historical_data.py`
-- Cursos: Programación I, Base de Datos, Estructuras de Datos, Ingeniería de Software
-- Tareas distribuidas a lo largo del semestre
+- Usuarios creados por `backend/populate_paes_historical_data.py`
+- Cursos PAES: Números, Álgebra y Funciones, Geometría, Comprensión Lectora, etc.
+- Estudiantes de 1° a 4° medio (14-18 años)
+- Tareas distribuidas a lo largo del período
 - Entregas con diferentes patrones de comportamiento
-- Calificaciones basadas en rendimiento y puntualidad
+- Calificaciones basadas en rendimiento y puntualidad (escala 1.0-7.0)
 
 ## ✅ Validación
 
@@ -101,14 +102,7 @@ Si agregas más datos a la plataforma:
 
 ## 📝 Comparación con Test Dataset
 
-| Característica | Historical Dataset | Test Dataset |
-|----------------|-------------------|--------------|
-| Origen | Base de datos real | Generado sintéticamente |
-| Registros | ~351 | ~3,048 |
-| Estudiantes | ~26 | 200 |
-| Cursos | ~5 | 10 |
-| Uso | Producción/Entrenamiento real | Pruebas/Desarrollo |
-| Reproducibilidad | Depende de BD | Fija (seed=42) |
+Para más detalles sobre el uso en Google Colab, consulta `GUIA_COLAB_MODELO_COMPLETO.md`
 
 ## 🎯 Resultados Esperados
 

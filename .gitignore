@@ -1,28 +1,53 @@
 # Ignorar la carpeta de entorno virtual de Python
 /backend/venv/
+**/venv/
+**/__pycache__/
 
 # Ignorar la carpeta de dependencias de Node.js
 /frontend/node_modules/
 /backend/node_modules/
+**/node_modules/
 /frontend/dist/
+**/dist/
 
 # Ignorar archivos subidos
 /backend/uploads/
+**/uploads/
 
 # Archivos de caché
-__pycache__/
 *.pyc
+*.pyo
+*.pyd
 *.sqlite
-.DS_Store # Archivos de macOS
+*.db
+.DS_Store
 
-# Archivos de entorno local (si los usas, ej. para variables de DB)
+# Archivos de entorno local
 .env
 .env.local
 .env.production
-.env.example
+.env.*.local
 
 # Logs
 *.log
+*.log.*
 
-# Archivos de IDE (ej. VS Code)
+# Archivos de IDE
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Modelos ML (grandes)
+ml-service/models/*.pkl
+ml-service/models/*.joblib
+!ml-service/models/.gitkeep
+
+# Datasets grandes (opcional, descomentar si no quieres versionar)
+# datasets/*.csv
+
+# Archivos temporales
+*.tmp
+*.temp
+*.bak

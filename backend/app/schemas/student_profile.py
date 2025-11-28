@@ -14,6 +14,8 @@ class StudentProfileBase(BaseModel):
     study_place_tranquility: float = Field(..., ge=1, le=10, description="Tranquilidad del lugar de estudio (1-10)")
     academic_pressure: float = Field(..., ge=1, le=10, description="Presión académica percibida (1-10)")
     gender: Optional[str] = Field(None, max_length=20, description="Género del estudiante")
+    grade_level: Optional[str] = Field(None, max_length=10, description="Nivel del estudiante: 1° medio, 2° medio, 3° medio, 4° medio")
+    age: Optional[int] = Field(None, ge=14, le=18, description="Edad del estudiante (14-18 años aproximadamente)")
     
     @validator('motivation', 'available_time', 'sleep_hours', 'study_hours', 
                'enjoyment_studying', 'study_place_tranquility', 'academic_pressure')
@@ -39,6 +41,8 @@ class StudentProfileUpdate(BaseModel):
     study_place_tranquility: Optional[float] = Field(None, ge=1, le=10)
     academic_pressure: Optional[float] = Field(None, ge=1, le=10)
     gender: Optional[str] = Field(None, max_length=20)
+    grade_level: Optional[str] = Field(None, max_length=10)
+    age: Optional[int] = Field(None, ge=14, le=18)
     
     @validator('motivation', 'available_time', 'sleep_hours', 'study_hours', 
                'enjoyment_studying', 'study_place_tranquility', 'academic_pressure', pre=True)

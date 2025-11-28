@@ -39,6 +39,8 @@ async def read_my_enrolled_courses(
             "id": course.id,
             "title": course.title,
             "description": course.description,
+            "subject": getattr(course, 'subject', None),
+            "paes_topic": getattr(course, 'paes_topic', None),
             "owner_id": course.owner_id,
             "owner_name": None,
             "owner_email": None,

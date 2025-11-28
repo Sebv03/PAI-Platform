@@ -1,0 +1,848 @@
+================================================================================
+MODELO DE MACHINE LEARNING - PLATAFORMA PAI
+Predicción de Riesgo Académico de Estudiantes
+================================================================================
+
+1. INTRODUCCIÓN
+================================================================================
+
+El modelo de Machine Learning de la Plataforma PAI (Plataforma Académica 
+Inteligente) está diseñado para predecir proactivamente el riesgo académico de 
+estudiantes en cursos específicos. Este modelo utiliza técnicas de aprendizaje 
+supervisado para clasificar a los estudiantes en dos categorías: "Riesgo Alto" 
+o "Riesgo Bajo" de bajo rendimiento académico.
+
+Objetivo Principal:
+- Identificar tempranamente estudiantes en riesgo de bajo rendimiento
+- Permitir intervención preventiva antes de que se manifiesten problemas
+- Proporcionar información objetiva basada en datos para la toma de decisiones
+
+================================================================================
+2. TIPO DE MODELO Y ALGORITMO
+================================================================================
+
+Algoritmo Seleccionado: Random Forest Classifier
+
+Justificación de la Selección:
+- Random Forest es un algoritmo de ensemble learning que combina múltiples 
+  árboles de decisión para mejorar la precisión y reducir el sobreajuste.
+- Es robusto ante datos faltantes y variables categóricas.
+- Proporciona información sobre la importancia de las features.
+- Maneja bien problemas de clasificación binaria.
+- Es interpretable a través de la importancia de características.
+
+Configuración del Modelo:
+- n_estimators: 100 (número de árboles en el bosque)
+- max_depth: 10 (profundidad máxima de cada árbol)
+- random_state: 42 (para reproducibilidad)
+- class_weight: 'balanced' (balancea automáticamente clases desbalanceadas)
+
+Biblioteca Utilizada: scikit-learn (RandomForestClassifier)
+
+================================================================================
+3. FEATURES (VARIABLES PREDICTORAS)
+================================================================================
+
+El modelo utiliza un total de 12 features (variables predictoras), divididas en 
+dos categorías principales:
+
+3.1. FEATURES DEL PERFIL DEL ESTUDIANTE (8 features)
+----------------------------------------------------
+
+Estas features provienen del cuestionario de perfil que el estudiante completa 
+durante el registro. Son características psicológicas y de comportamiento que 
+están disponibles desde el primer día del curso, permitiendo predicción temprana.
+
+1. MOTIVATION (Motivación)
+   - Descripción: Nivel de motivación del estudiante para estudiar
+   - Escala Original: 1-10 (cuestionario)
+   - Normalización: (valor - 1) / 9 → Escala 0-1
+   - Rango Normalizado: 0.0 a 1.0
+   - Interpretación:
+     * 0.0 = Motivación muy baja (valor original 1)
+     * 0.5 = Motivación moderada (valor original 5.5)
+     * 1.0 = Motivación muy alta (valor original 10)
+   - Valor por Defecto (si falta): 0.5
+
+2. AVAILABLE_TIME (Tiempo Disponible)
+   - Descripción: Tiempo disponible que tiene el estudiante para estudiar
+   - Escala Original: 1-10 (cuestionario)
+   - Normalización: (valor - 1) / 9 → Escala 0-1
+   - Rango Normalizado: 0.0 a 1.0
+   - Interpretación:
+     * 0.0 = Poco tiempo disponible (valor original 1)
+     * 1.0 = Mucho tiempo disponible (valor original 10)
+   - Valor por Defecto (si falta): 0.5
+
+3. SLEEP_HOURS (Horas de Sueño)
+   - Descripción: Horas de sueño por noche del estudiante
+   - Escala Original: 1-10 (cuestionario, donde 10 = 8+ horas)
+   - Normalización: (valor - 1) / 9 → Escala 0-1
+   - Rango Normalizado: 0.0 a 1.0
+   - Interpretación:
+     * 0.0 = Pocas horas de sueño (valor original 1)
+     * 1.0 = Suficientes horas de sueño (valor original 10)
+   - Valor por Defecto (si falta): 0.5
+
+4. STUDY_HOURS (Horas de Estudio)
+   - Descripción: Horas dedicadas a estudiar diariamente
+   - Escala Original: 1-10 (cuestionario)
+   - Normalización: (valor - 1) / 9 → Escala 0-1
+   - Rango Normalizado: 0.0 a 1.0
+   - Interpretación:
+     * 0.0 = Pocas horas de estudio (valor original 1)
+     * 1.0 = Muchas horas de estudio (valor original 10)
+   - Valor por Defecto (si falta): 0.5
+
+5. ENJOYMENT_STUDYING (Disfrute del Estudio)
+   - Descripción: Qué tanto le gusta estudiar al estudiante
+   - Escala Original: 1-10 (cuestionario)
+   - Normalización: (valor - 1) / 9 → Escala 0-1
+   - Rango Normalizado: 0.0 a 1.0
+   - Interpretación:
+     * 0.0 = No disfruta estudiar (valor original 1)
+     * 1.0 = Disfruta mucho estudiar (valor original 10)
+   - Valor por Defecto (si falta): 0.5
+
+6. STUDY_PLACE_TRANQUILITY (Tranquilidad del Lugar de Estudio)
+   - Descripción: Qué tan tranquilo es el lugar donde estudia
+   - Escala Original: 1-10 (cuestionario)
+   - Normalización: (valor - 1) / 9 → Escala 0-1
+   - Rango Normalizado: 0.0 a 1.0
+   - Interpretación:
+     * 0.0 = Lugar muy ruidoso/distractivo (valor original 1)
+     * 1.0 = Lugar muy tranquilo (valor original 10)
+   - Valor por Defecto (si falta): 0.5
+
+7. ACADEMIC_PRESSURE (Presión Académica)
+   - Descripción: Nivel de presión académica percibida por el estudiante
+   - Escala Original: 1-10 (cuestionario)
+   - Normalización: (valor - 1) / 9 → Escala 0-1
+   - Rango Normalizado: 0.0 a 1.0
+   - Interpretación:
+     * 0.0 = Baja presión académica (valor original 1)
+     * 1.0 = Alta presión académica (valor original 10)
+   - Nota: Valores altos pueden indicar mayor riesgo
+   - Valor por Defecto (si falta): 0.5
+
+8. GENDER_ENCODED (Género Codificado)
+   - Descripción: Género del estudiante codificado numéricamente
+   - Tipo: Variable categórica codificada
+   - Codificación:
+     * 0.0 = Masculino
+     * 1.0 = Femenino
+     * 0.5 = Otro/No especificado
+   - Valor por Defecto (si falta): 0.5
+
+3.2. FEATURES TRANSACCIONALES (4 features)
+-------------------------------------------
+
+Estas features se calculan a partir de los datos históricos del estudiante en 
+el curso (entregas, calificaciones, etc.). Si el estudiante aún no tiene datos 
+transaccionales (curso nuevo), se utilizan valores por defecto neutrales (0.5).
+
+1. SUBMISSION_DELAY_RATE (Tasa de Retraso en Entregas)
+   - Descripción: Proporción de entregas que fueron tardías respecto a la 
+                  fecha límite
+   - Cálculo: (Número de entregas tardías) / (Número total de entregas)
+   - Rango: 0.0 a 1.0
+   - Interpretación:
+     * 0.0 = Todas las entregas fueron a tiempo
+     * 0.5 = 50% de las entregas fueron tardías (valor por defecto si no hay datos)
+     * 1.0 = Todas las entregas fueron tardías
+   - Fórmula:
+     delay_rate = (entregas_tardías) / (total_entregas)
+     donde entregas_tardías = entregas donde submitted_at > due_date
+   - Valor por Defecto (si no hay entregas): 0.5
+
+2. NON_SUBMISSION_RATE (Tasa de No Entrega)
+   - Descripción: Proporción de tareas que NO fueron entregadas
+   - Cálculo: 1 - (Tareas entregadas / Total de tareas)
+   - Rango: 0.0 a 1.0
+   - Interpretación:
+     * 0.0 = Todas las tareas fueron entregadas (100% de cumplimiento)
+     * 0.5 = 50% de las tareas no fueron entregadas (valor por defecto si no hay datos)
+     * 1.0 = Ninguna tarea fue entregada (0% de cumplimiento)
+   - Fórmula:
+     non_submission_rate = 1 - (tareas_entregadas / total_tareas)
+   - Valor por Defecto (si no hay tareas): 0.5
+
+3. AVERAGE_GRADE (Promedio de Notas Normalizado)
+   - Descripción: Promedio de calificaciones del estudiante normalizado a 0-1
+   - Escala Original: 1.0 - 7.0 (escala chilena)
+   - Normalización: (promedio - 1.0) / 6.0
+   - Rango: 0.0 a 1.0
+   - Interpretación:
+     * 0.0 = Promedio de 1.0 (peor calificación)
+     * 0.5 = Promedio de 4.0 (promedio medio, valor por defecto si no hay datos)
+     * 1.0 = Promedio de 7.0 (mejor calificación)
+   - Fórmula:
+     average_grade = (promedio_calificaciones - 1.0) / 6.0
+   - Valor por Defecto (si no hay calificaciones): 0.5
+
+4. GRADE_VARIABILITY (Variabilidad de Notas)
+   - Descripción: Variabilidad o consistencia en las calificaciones
+   - Cálculo: Desviación estándar de las notas normalizada
+   - Rango: 0.0 a 1.0
+   - Interpretación:
+     * 0.0 = Notas muy consistentes (poca variación)
+     * 0.5 = Variabilidad moderada (valor por defecto si no hay suficientes datos)
+     * 1.0 = Notas muy variables (alta variación, inconsistencia)
+   - Fórmula:
+     grade_variability = min(desviación_estándar / 3.0, 1.0)
+   - Nota: Se requiere al menos 2 calificaciones para calcular
+   - Valor por Defecto (si hay menos de 2 calificaciones): 0.5
+
+================================================================================
+4. VARIABLE OBJETIVO (TARGET VARIABLE - Y)
+================================================================================
+
+El modelo predice una variable binaria (0 o 1) que representa el nivel de 
+riesgo académico:
+
+- 0 = Riesgo Bajo (estudiante probablemente tendrá buen rendimiento)
+- 1 = Riesgo Alto (estudiante probablemente tendrá bajo rendimiento)
+
+4.1. CÁLCULO DE LA VARIABLE OBJETIVO
+-------------------------------------
+
+La variable objetivo se calcula de dos formas según la disponibilidad de datos:
+
+CASO 1: Cuando hay datos transaccionales (entregas y calificaciones)
+---------------------------------------------------------------------
+Un estudiante se considera en "Riesgo Alto" si cumple AL MENOS UNA de estas 
+condiciones:
+
+1. Promedio de calificaciones < 4.0 (en escala 1-7)
+   - Esto significa que el estudiante está bajo el promedio mínimo aceptable
+   
+2. Tasa de no entrega > 50%
+   - Más de la mitad de las tareas no fueron entregadas
+
+Lógica:
+  risk_high = (average_grade_original < 4.0) OR (non_submission_rate > 0.5)
+
+CASO 2: Cuando NO hay datos transaccionales (predicción temprana)
+-------------------------------------------------------------------
+Para estudiantes nuevos o en cursos nuevos, se usa el perfil del cuestionario. 
+Un estudiante se considera en "Riesgo Alto" si cumple AL MENOS UNA de estas 
+condiciones:
+
+1. Motivación muy baja (motivation < 0.3, equivalente a < 3.7 en escala 1-10)
+2. Presión académica muy alta (academic_pressure > 0.7, equivalente a > 7.3 en escala 1-10)
+3. Tiempo disponible muy bajo (available_time < 0.3, equivalente a < 3.7 en escala 1-10)
+4. Horas de sueño muy bajas (sleep_hours < 0.3, equivalente a < 3.7 en escala 1-10)
+
+Lógica:
+  risk_high = (motivation < 0.3) OR 
+              (academic_pressure > 0.7) OR 
+              (available_time < 0.3) OR 
+              (sleep_hours < 0.3)
+
+Esta lógica permite hacer predicciones tempranas basadas solo en el perfil del 
+estudiante, antes de que haya entregas o calificaciones.
+
+================================================================================
+5. PROCESO DE FEATURE ENGINEERING
+================================================================================
+
+El proceso de Feature Engineering transforma los datos brutos de la base de 
+datos en features normalizadas listas para el modelo.
+
+5.1. FLUJO DE DATOS
+-------------------
+
+1. Extracción de Datos (DataService)
+   - Se obtienen datos históricos de la base de datos PostgreSQL
+   - Incluye: estudiantes, cursos, tareas, entregas, calificaciones, perfiles
+   - Los datos se agrupan por (student_id, course_id)
+
+2. Cálculo de Features (FeatureEngineering)
+   - Para cada par (estudiante, curso):
+     a) Se calculan features del perfil (del cuestionario)
+     b) Se calculan features transaccionales (de entregas y calificaciones)
+     c) Se normalizan todas las features a escala 0-1
+     d) Se manejan valores faltantes con valores por defecto
+
+3. Preparación para el Modelo
+   - Se crea un DataFrame con todas las features
+   - Se calcula la variable objetivo (Y) según las reglas definidas
+   - Se verifica que todas las features estén presentes
+
+5.2. NORMALIZACIÓN
+------------------
+
+Todas las features se normalizan a una escala común (0-1) para:
+- Evitar que features con rangos grandes dominen el modelo
+- Mejorar la convergencia del algoritmo
+- Facilitar la interpretación
+
+Métodos de Normalización:
+
+1. Min-Max Normalization (para features del perfil):
+   normalized = (valor - min) / (max - min)
+   Ejemplo: (5 - 1) / (10 - 1) = 4/9 = 0.444
+
+2. Escala Original → Normalizada (para promedio de notas):
+   normalized = (promedio - 1.0) / 6.0
+   Ejemplo: (4.5 - 1.0) / 6.0 = 3.5/6.0 = 0.583
+
+3. Proporción (para tasas):
+   normalized = valor_directo (ya está en 0-1)
+   Ejemplo: 0.3 = 30% de entregas tardías
+
+================================================================================
+6. PROCESO DE ENTRENAMIENTO
+================================================================================
+
+6.1. PREPARACIÓN DE DATOS
+--------------------------
+
+1. Obtención de Datos Históricos
+   - Se extraen todos los datos históricos de la base de datos
+   - Se incluyen estudiantes que tienen entregas y calificaciones
+   - Los datos se estructuran en un DataFrame de pandas
+
+2. Cálculo de Features
+   - Se calculan las 12 features para cada (estudiante, curso)
+   - Se genera un DataFrame con una fila por combinación estudiante-curso
+
+3. Cálculo de Variable Objetivo
+   - Se calcula Y (riesgo alto/bajo) para cada fila
+   - Se verifica que haya muestras de ambas clases (0 y 1)
+
+4. Balanceo de Clases (si es necesario)
+   - Si solo hay una clase, se generan muestras sintéticas de la otra
+   - Esto asegura que el modelo pueda aprender a distinguir ambas clases
+
+6.2. DIVISIÓN DE DATOS
+-----------------------
+
+Los datos se dividen en dos conjuntos:
+
+- Conjunto de Entrenamiento: 80% de los datos
+  * Se usa para entrenar el modelo
+  * El modelo aprende los patrones de estos datos
+
+- Conjunto de Prueba: 20% de los datos
+  * Se usa para evaluar el modelo
+  * Permite medir qué tan bien generaliza el modelo
+
+Parámetros de División:
+- test_size: 0.2 (20% para prueba)
+- random_state: 42 (para reproducibilidad)
+- stratify: y (mantiene proporción de clases en ambos conjuntos)
+
+6.3. ENTRENAMIENTO DEL MODELO
+------------------------------
+
+1. Inicialización del Modelo
+   - Se crea un RandomForestClassifier con los parámetros configurados
+   - n_estimators=100: 100 árboles de decisión
+   - max_depth=10: profundidad máxima de cada árbol
+   - class_weight='balanced': ajusta pesos para clases desbalanceadas
+
+2. Ajuste (Fitting)
+   - El modelo se entrena con X_train (features) y y_train (target)
+   - Cada árbol aprende patrones diferentes de los datos
+   - El modelo combina las predicciones de todos los árboles
+
+3. Predicción en Conjunto de Prueba
+   - Se hacen predicciones en X_test
+   - Se comparan con y_test (valores reales)
+
+4. Cálculo de Métricas
+   - Se calculan métricas de evaluación (accuracy, precision, recall, F1)
+
+6.4. GUARDADO DEL MODELO
+-------------------------
+
+El modelo entrenado se guarda en disco usando pickle:
+- Formato: archivo .pkl (formato serializado de Python)
+- Ubicación: ml-service/models/risk_prediction_model.pkl
+- Permite cargar el modelo sin reentrenar cada vez
+
+================================================================================
+7. MÉTRICAS DE EVALUACIÓN
+================================================================================
+
+El modelo se evalúa usando las siguientes métricas estándar de clasificación:
+
+7.1. ACCURACY (Precisión Global)
+---------------------------------
+- Descripción: Proporción de predicciones correctas sobre el total
+- Fórmula: (Verdaderos Positivos + Verdaderos Negativos) / Total
+- Rango: 0.0 a 1.0
+- Interpretación:
+  * 0.0 = 0% de aciertos (peor caso)
+  * 1.0 = 100% de aciertos (mejor caso)
+  * > 0.7 = Buen desempeño general
+
+7.2. PRECISION (Precisión)
+---------------------------
+- Descripción: De los estudiantes predichos como "riesgo alto", cuántos 
+               realmente están en riesgo
+- Fórmula: Verdaderos Positivos / (Verdaderos Positivos + Falsos Positivos)
+- Rango: 0.0 a 1.0
+- Interpretación:
+  * Alto = Pocos falsos positivos (no etiquetamos erróneamente estudiantes)
+  * Bajo = Muchos falsos positivos (etiquetamos muchos estudiantes que no están en riesgo)
+
+7.3. RECALL (Sensibilidad)
+---------------------------
+- Descripción: De los estudiantes realmente en riesgo, cuántos fueron 
+               correctamente identificados
+- Fórmula: Verdaderos Positivos / (Verdaderos Positivos + Falsos Negativos)
+- Rango: 0.0 a 1.0
+- Interpretación:
+  * Alto = Capturamos la mayoría de estudiantes en riesgo (pocos falsos negativos)
+  * Bajo = Nos perdemos muchos estudiantes en riesgo (muchos falsos negativos)
+
+7.4. F1-SCORE (Puntuación F1)
+------------------------------
+- Descripción: Media armónica entre Precision y Recall
+- Fórmula: 2 * (Precision * Recall) / (Precision + Recall)
+- Rango: 0.0 a 1.0
+- Interpretación:
+  * Combina precision y recall en una sola métrica
+  * Útil cuando hay desbalance entre clases
+  * > 0.7 = Buen balance entre precision y recall
+
+7.5. INTERPRETACIÓN DE MÉTRICAS
+--------------------------------
+
+En el contexto de predicción de riesgo académico:
+
+- Precision Alta: Es importante porque queremos evitar etiquetar erróneamente 
+  estudiantes (evitar estigmatización)
+
+- Recall Alto: Es importante porque queremos identificar a todos los estudiantes 
+  en riesgo (no perder ningún caso)
+
+- F1-Score: Busca un balance entre ambos. En este contexto, un recall alto 
+  puede ser más importante que precision (mejor detectar de más que dejar pasar)
+
+Ejemplo de Métricas Típicas:
+  - Accuracy: 0.85 (85% de aciertos)
+  - Precision: 0.83 (83% de los predichos como riesgo alto realmente lo están)
+  - Recall: 0.85 (85% de los estudiantes en riesgo fueron identificados)
+  - F1-Score: 0.84 (balance entre precision y recall)
+
+================================================================================
+8. PROCESO DE PREDICCIÓN
+================================================================================
+
+Una vez entrenado, el modelo puede hacer predicciones en tiempo real.
+
+8.1. TIPOS DE PREDICCIÓN
+-------------------------
+
+1. PREDICCIÓN INDIVIDUAL (por estudiante y curso)
+   - Endpoint: POST /predict
+   - Input: student_id, course_id
+   - Output: risk_level, risk_score, features, confidence
+
+2. PREDICCIÓN BASADA EN PERFIL (sin datos transaccionales)
+   - Endpoint: POST /predict/profile
+   - Input: student_id
+   - Output: risk_level, risk_score, features (solo perfil), confidence
+   - Permite predicción temprana antes de tener entregas
+
+3. PREDICCIÓN BATCH (todos los estudiantes de un curso)
+   - Endpoint: GET /predict/batch?course_id=X
+   - Input: course_id
+   - Output: Lista de predicciones para todos los estudiantes del curso
+
+8.2. PASOS DE UNA PREDICCIÓN
+-----------------------------
+
+1. Carga del Modelo
+   - Se verifica si el modelo está cargado en memoria
+   - Si no, se carga desde el archivo guardado
+
+2. Obtención de Datos
+   - Se obtienen los datos del estudiante en el curso específico
+   - Incluye entregas, calificaciones, perfil
+
+3. Cálculo de Features
+   - Se calculan las 12 features según los datos disponibles
+   - Si faltan datos transaccionales, se usan valores por defecto
+
+4. Normalización
+   - Todas las features se normalizan a escala 0-1
+   - Se mantiene consistencia con el entrenamiento
+
+5. Predicción
+   - El modelo recibe las features como entrada
+   - Devuelve:
+     * Clase predicha (0 = riesgo bajo, 1 = riesgo alto)
+     * Probabilidades para cada clase
+
+6. Cálculo de Confianza
+   - Se calcula la confianza como: |prob_riesgo_alto - prob_riesgo_bajo|
+   - Rango: 0.0 a 1.0
+   - Interpretación:
+     * > 0.7 = Alta confianza en la predicción
+     * 0.4 - 0.7 = Confianza moderada
+     * < 0.4 = Baja confianza (predicción incierta)
+
+7. Formateo de Respuesta
+   - Se convierte la predicción a formato legible
+   - Se incluyen todas las features utilizadas
+   - Se redondea a 3 decimales para legibilidad
+
+8.3. EJEMPLO DE PREDICCIÓN
+---------------------------
+
+Input (Request):
+{
+  "student_id": 123,
+  "course_id": 5
+}
+
+Features Calculadas:
+{
+  "motivation": 0.6,
+  "available_time": 0.5,
+  "sleep_hours": 0.7,
+  "study_hours": 0.6,
+  "enjoyment_studying": 0.5,
+  "study_place_tranquility": 0.8,
+  "academic_pressure": 0.4,
+  "gender_encoded": 1.0,
+  "submission_delay_rate": 0.3,
+  "non_submission_rate": 0.2,
+  "average_grade": 0.65,
+  "grade_variability": 0.2
+}
+
+Predicción del Modelo:
+- Clase: 0 (riesgo bajo)
+- Probabilidades: [0.75, 0.25]
+  * Probabilidad riesgo bajo: 75%
+  * Probabilidad riesgo alto: 25%
+
+Output (Response):
+{
+  "student_id": 123,
+  "course_id": 5,
+  "risk_level": "bajo",
+  "risk_score": 0.25,
+  "confidence": 0.50,
+  "features": {
+    "motivation": 0.6,
+    "available_time": 0.5,
+    ...
+  }
+}
+
+================================================================================
+9. PREDICCIÓN TEMPRANA (SOLO CON PERFIL)
+================================================================================
+
+Una característica única del modelo es su capacidad de hacer predicciones 
+tempranas basadas SOLO en el perfil del estudiante, antes de que haya entregas 
+o calificaciones.
+
+9.1. CASO DE USO
+-----------------
+
+Cuando un estudiante se registra y completa el cuestionario, podemos hacer una 
+predicción inicial de riesgo sin necesidad de esperar a que entregue tareas.
+
+9.2. IMPLEMENTACIÓN
+-------------------
+
+Para predicción temprana:
+- Se utilizan las 8 features del perfil (del cuestionario)
+- Las 4 features transaccionales se establecen en valores neutrales (0.5)
+- El modelo usa principalmente las features del perfil para la predicción
+- La confianza puede ser menor que con datos transaccionales
+
+9.3. EJEMPLO
+------------
+
+Estudiante nuevo que acaba de registrarse:
+- Perfil:
+  * Motivation: 0.3 (baja)
+  * Academic pressure: 0.8 (alta)
+  * Available time: 0.4 (moderada)
+- Features transaccionales: todas en 0.5 (neutral)
+- Predicción: Riesgo Alto (basado principalmente en baja motivación y alta presión)
+- Confianza: Moderada (porque faltan datos transaccionales)
+
+================================================================================
+10. ENDPOINTS DEL SERVICIO ML
+================================================================================
+
+El servicio ML expone una API REST con los siguientes endpoints:
+
+10.1. GET /health
+-----------------
+Verifica el estado del servicio y si el modelo está cargado.
+
+Respuesta:
+{
+  "status": "healthy",
+  "model_loaded": true
+}
+
+10.2. POST /train
+-----------------
+Entrena el modelo con los datos históricos de la base de datos.
+
+Request: (sin body, usa datos de la BD)
+
+Response:
+{
+  "status": "success",
+  "accuracy": 0.85,
+  "precision": 0.83,
+  "recall": 0.85,
+  "f1_score": 0.84,
+  "samples_trained": 245,
+  "message": "Modelo entrenado exitosamente con 245 muestras"
+}
+
+10.3. POST /predict
+-------------------
+Predice el riesgo de un estudiante en un curso específico.
+
+Request:
+{
+  "student_id": 123,
+  "course_id": 5
+}
+
+Response:
+{
+  "student_id": 123,
+  "course_id": 5,
+  "risk_level": "alto",
+  "risk_score": 0.75,
+  "confidence": 0.65,
+  "features": {
+    "motivation": 0.4,
+    "available_time": 0.3,
+    ...
+  }
+}
+
+10.4. POST /predict/profile
+---------------------------
+Predice el riesgo basándose solo en el perfil del estudiante.
+
+Request:
+{
+  "student_id": 123
+}
+
+Response:
+{
+  "student_id": 123,
+  "course_id": 0,
+  "risk_level": "alto",
+  "risk_score": 0.70,
+  "confidence": 0.60,
+  "features": {
+    "motivation": 0.3,
+    "available_time": 0.4,
+    ...
+  }
+}
+
+10.5. GET /predict/batch?course_id=X
+-------------------------------------
+Predice el riesgo de todos los estudiantes en un curso.
+
+Response: (Array de predicciones)
+[
+  {
+    "student_id": 123,
+    "course_id": 5,
+    "risk_level": "alto",
+    "risk_score": 0.75,
+    ...
+  },
+  {
+    "student_id": 124,
+    "course_id": 5,
+    "risk_level": "bajo",
+    "risk_score": 0.25,
+    ...
+  }
+]
+
+================================================================================
+11. INTEGRACIÓN CON LA PLATAFORMA
+================================================================================
+
+El modelo ML se integra con la plataforma principal de varias formas:
+
+11.1. BACKEND PRINCIPAL
+-----------------------
+El backend FastAPI hace llamadas HTTP al servicio ML para obtener predicciones.
+
+Ejemplo:
+```python
+import httpx
+
+async def get_student_risk(student_id: int, course_id: int):
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "http://localhost:8001/predict",
+            json={"student_id": student_id, "course_id": course_id}
+        )
+        return response.json()
+```
+
+11.2. DASHBOARD DE ADMINISTRADOR
+--------------------------------
+- Muestra predicciones de riesgo para todos los cursos
+- Permite buscar estudiantes y ver su riesgo basado en perfil
+- Permite entrenar el modelo desde la interfaz
+
+11.3. DASHBOARD DE PROFESOR
+----------------------------
+- Muestra predicciones de riesgo de estudiantes en sus cursos
+- Identifica estudiantes en riesgo para intervención temprana
+- Visualiza features y nivel de confianza
+
+11.4. DASHBOARD DE ESTUDIANTE
+------------------------------
+(Actualmente no muestra predicciones, pero podría hacerlo en el futuro)
+
+================================================================================
+12. LIMITACIONES Y CONSIDERACIONES
+================================================================================
+
+12.1. LIMITACIONES
+------------------
+
+1. Datos de Entrenamiento
+   - El modelo depende de la calidad y cantidad de datos históricos
+   - Con pocos datos, la precisión puede ser menor
+   - Requiere reentrenamiento periódico con nuevos datos
+
+2. Generalización
+   - El modelo fue entrenado con datos específicos del contexto PAES
+   - Puede no generalizar bien a otros contextos educativos
+   - Requiere ajustes para diferentes sistemas de calificación
+
+3. Variables de Contexto
+   - No considera factores externos (problemas familiares, salud, etc.)
+   - Solo usa datos disponibles en la plataforma
+   - Las predicciones son probabilísticas, no deterministas
+
+4. Interpretabilidad
+   - Random Forest es más interpretable que redes neuronales, pero aún es 
+     complejo entender exactamente cómo toma decisiones
+   - La importancia de features puede dar pistas, pero no es causalidad
+
+12.2. CONSIDERACIONES ÉTICAS
+-----------------------------
+
+1. No Determinismo
+   - Las predicciones son probabilísticas, no deterministas
+   - Un estudiante predicho como "riesgo alto" puede rendir bien
+   - Las predicciones deben usarse como herramienta de apoyo, no como juicio
+
+2. Transparencia
+   - El modelo muestra las features utilizadas
+   - Los usuarios pueden ver el nivel de confianza
+   - Las predicciones pueden revisarse y apelarse
+
+3. Privacidad
+   - Solo se usan datos académicos y del cuestionario
+   - No se almacenan predicciones a largo plazo (solo se calculan on-demand)
+   - Los datos están protegidos por autenticación
+
+4. No Discriminación
+   - El género se codifica neutralmente (no se usa para discriminar)
+   - El modelo se entrena con class_weight='balanced' para evitar sesgos
+
+================================================================================
+13. MEJORAS FUTURAS
+================================================================================
+
+13.1. MEJORAS TÉCNICAS
+----------------------
+
+1. Más Features
+   - Agregar features temporales (tendencia de rendimiento)
+   - Incluir interacciones entre features
+   - Agregar features de participación en foro/comunicados
+
+2. Modelos Alternativos
+   - Probar Gradient Boosting (XGBoost, LightGBM)
+   - Implementar ensemble de múltiples modelos
+   - Usar modelos de deep learning si hay suficientes datos
+
+3. Optimización de Hiperparámetros
+   - Usar Grid Search o Random Search
+   - Optimizar número de árboles, profundidad, etc.
+   - Usar validación cruzada para mejor evaluación
+
+4. Feature Selection
+   - Analizar importancia de features
+   - Eliminar features redundantes
+   - Usar técnicas de selección automática
+
+13.2. MEJORAS FUNCIONALES
+-------------------------
+
+1. Predicción por Temática PAES
+   - Entrenar modelos específicos por asignatura
+   - Mejor precisión por contexto específico
+
+2. Predicción Temporal
+   - Predecir riesgo a diferentes plazos (corto, mediano, largo)
+   - Mostrar tendencias de riesgo a lo largo del curso
+
+3. Explicabilidad
+   - Agregar SHAP values para explicar predicciones
+   - Mostrar qué features contribuyen más al riesgo
+
+4. Alertas Automáticas
+   - Notificar a profesores cuando un estudiante pasa a riesgo alto
+   - Generar reportes automáticos de estudiantes en riesgo
+
+================================================================================
+14. CONCLUSIÓN
+================================================================================
+
+El modelo de Machine Learning de la Plataforma PAI es una herramienta poderosa 
+para la identificación temprana de estudiantes en riesgo académico. Utiliza un 
+enfoque híbrido que combina:
+
+- Features del perfil del estudiante (disponibles desde el registro)
+- Features transaccionales (calculadas durante el curso)
+- Algoritmo Random Forest robusto y probado
+- Capacidad de predicción temprana sin necesidad de datos históricos del curso
+
+El modelo permite:
+✅ Identificación proactiva de estudiantes en riesgo
+✅ Predicción temprana basada solo en perfil
+✅ Integración fluida con la plataforma principal
+✅ Transparencia en las predicciones (features y confianza visibles)
+
+Sin embargo, es importante recordar que:
+⚠️ Las predicciones son probabilísticas, no deterministas
+⚠️ Deben usarse como herramienta de apoyo, no como juicio definitivo
+⚠️ Requieren interpretación humana y contexto
+⚠️ Necesitan actualización periódica con nuevos datos
+
+El modelo representa un paso importante hacia la educación predictiva y 
+preventiva, permitiendo intervenciones tempranas que pueden mejorar 
+significativamente los resultados académicos de los estudiantes.
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
+
+Versión: 1.0
+Fecha: Noviembre 2024
+Plataforma: PAI (Plataforma Académica Inteligente)
+
+
+

@@ -35,6 +35,8 @@ def create_user_course(db: Session, course_in: CourseCreate, owner: User) -> Cou
     db_course = Course(
         title=course_in.title,
         description=course_in.description,
+        subject=course_in.subject,  # Asignatura opcional
+        paes_topic=course_in.paes_topic,  # Temática PAES opcional
         owner_id=owner.id # Asocia el curso al ID del propietario
     )
     db.add(db_course)

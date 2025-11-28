@@ -11,7 +11,8 @@ from app.models.user import User, UserRole
 from app.services.ml_service import (
     get_student_risk_prediction, 
     get_course_risk_predictions,
-    train_ml_model
+    train_ml_model,
+    get_student_profile_prediction
 )
 
 router = APIRouter()
@@ -70,6 +71,34 @@ async def get_course_risks(
         )
     
     return predictions
+
+
+@router.get("/student/{student_id}/profile-prediction")
+async def get_student_profile_risk(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Any:
+    """
+    Obtiene la predicción de riesgo académico para un estudiante basándose SOLO en su perfil del cuestionario.
+    Esta predicción puede hacerse antes de que el estudiante tenga datos transaccionales.
+    Solo administradores y docentes pueden ver estas predicciones.
+    """
+    if current_user.role not in [UserRole.DOCENTE, UserRole.ADMINISTRADOR]:
+        raise HTTPException(
+            status_code=403,
+            detail="Solo docentes y administradores pueden ver predicciones de riesgo"
+        )
+    
+    prediction = await get_student_profile_prediction(student_id)
+    
+    if prediction is None:
+        raise HTTPException(
+            status_code=503,
+            detail="El servicio de ML no está disponible. Verifica que esté corriendo en http://localhost:8001"
+        )
+    
+    return prediction
 
 
 @router.post("/train")

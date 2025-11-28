@@ -27,6 +27,10 @@ class StudentProfile(Base):
     # Variable categórica
     gender = Column(String(20), nullable=True, comment="Género del estudiante")
     
+    # Nivel del estudiante (1° a 4° medio - 14 a 18 años)
+    grade_level = Column(String(10), nullable=True, comment="Nivel del estudiante: 1° medio, 2° medio, 3° medio, 4° medio")
+    age = Column(Integer, nullable=True, comment="Edad del estudiante (14-18 años aproximadamente)")
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

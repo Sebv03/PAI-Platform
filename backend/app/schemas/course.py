@@ -8,17 +8,23 @@ from app.schemas.user import User as UserSchema # Importa el esquema de User par
 class CourseCreate(BaseModel):
     title: str
     description: Optional[str] = None # La descripción puede ser opcional al crear
+    subject: Optional[str] = None  # Asignatura (ej: Matemáticas, Lenguaje, Ciencias)
+    paes_topic: Optional[str] = None  # Temática PAES (ej: Números, Álgebra, Geometría)
 
 # Esquema para la actualización de un curso
 class CourseUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+    subject: Optional[str] = None
+    paes_topic: Optional[str] = None
 
 # Esquema principal para la respuesta del curso (lo que se devuelve por la API)
 class Course(BaseModel): # NOTA: Se llama igual que el modelo, pero es el esquema Pydantic
     id: int
     title: str
     description: Optional[str] = None
+    subject: Optional[str] = None  # Asignatura
+    paes_topic: Optional[str] = None  # Temática PAES
     owner_id: int # El ID del propietario
     owner_name: Optional[str] = None  # Nombre del profesor
     owner_email: Optional[str] = None  # Email del profesor

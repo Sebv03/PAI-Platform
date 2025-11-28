@@ -1,6 +1,7 @@
 // frontend/src/components/AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import apiClient from '../services/api';
+import StudentSearchPanel from './StudentSearchPanel';
 
 const AdminDashboard = ({ user }) => {
     const [courses, setCourses] = useState([]);
@@ -131,6 +132,9 @@ const AdminDashboard = ({ user }) => {
                     <p>{error}</p>
                 </div>
             )}
+
+            {/* Búsqueda de Estudiantes y Predicción de Riesgo */}
+            <StudentSearchPanel />
 
             {/* Botón para crear curso de prueba */}
             <div className="card mb-lg">
